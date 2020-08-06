@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform">
+  <meta http-equiv="Cache-Control" content="no-siteapp">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000">
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top">
+  
+  
+  <title>Android源码(6)-Android消息机制 | Hexo</title>
+  <meta name="description" content="本文介绍Android的消息机制。 一、引言假设现在我们有这样的需求，点一下图中的button，然后去获取一些数据（假设这个步骤是一个耗时的操作），然后获取完后将得到的数据返回显示到屏幕上。为了避免产生ANR(Application Not Response)问题，通常我们会在新的线程去做耗时的操作，然后在UI线程里面更新组件，所以Handler就是类似这样子一个机制。  那么我们会怎么去实现呢？">
+<meta name="keywords" content="Android源码">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Android源码(6)-Android消息机制">
+<meta property="og:url" content="https://langgithub.github.io/2020/06/09/Android源码(6)-Android消息机制/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="本文介绍Android的消息机制。 一、引言假设现在我们有这样的需求，点一下图中的button，然后去获取一些数据（假设这个步骤是一个耗时的操作），然后获取完后将得到的数据返回显示到屏幕上。为了避免产生ANR(Application Not Response)问题，通常我们会在新的线程去做耗时的操作，然后在UI线程里面更新组件，所以Handler就是类似这样子一个机制。  那么我们会怎么去实现呢？">
+<meta property="og:locale" content="default">
+<meta property="og:image" content="https://langgithub.github.io/img/android-looper-handler-message-01.png">
+<meta property="og:image" content="https://langgithub.github.io/img/android-looper-prepare.png">
+<meta property="og:image" content="https://langgithub.github.io/img/android-looper-loop.png">
+<meta property="og:image" content="https://langgithub.github.io/img/android-looper-handler-2.png">
+<meta property="og:image" content="https://langgithub.github.io/img/android-handler-send-handle-msg.png">
+<meta property="og:image" content="https://langgithub.github.io/img/android-ui-thread-handler.png">
+<meta property="og:updated_time" content="2020-06-09T09:29:21.365Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Android源码(6)-Android消息机制">
+<meta name="twitter:description" content="本文介绍Android的消息机制。 一、引言假设现在我们有这样的需求，点一下图中的button，然后去获取一些数据（假设这个步骤是一个耗时的操作），然后获取完后将得到的数据返回显示到屏幕上。为了避免产生ANR(Application Not Response)问题，通常我们会在新的线程去做耗时的操作，然后在UI线程里面更新组件，所以Handler就是类似这样子一个机制。  那么我们会怎么去实现呢？">
+<meta name="twitter:image" content="https://langgithub.github.io/img/android-looper-handler-message-01.png">
+  <!-- Canonical links -->
+  <link rel="canonical" href="https://langgithub.github.io/2020/06/09/Android源码(6)-Android消息机制/index.html">
+  
+    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  <link rel="stylesheet" href="/css/style.css">
+  
+  
+  
+  
+</head>
+
+
+<body class="main-center" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="https://github.com/langgithub" target="_blank">
+          <img class="img-circle img-rotate" src="/images/avatar.jpg" width="200" height="200">
+        </a>
+        <h2 id="name" class="hidden-xs hidden-sm">yuanlang</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md">Python</h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Beijing, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
+
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="Search" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="Type something..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+    </div>
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
+</div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav ">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">Home</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">Archives</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">Categories</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">Tags</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-repository">
+          <a href="/repository">
+            
+            <i class="icon icon-project"></i>
+            
+            <span class="menu-title">Repository</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-books">
+          <a href="/books">
+            
+            <i class="icon icon-book-fill"></i>
+            
+            <span class="menu-title">Books</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-links">
+          <a href="/links">
+            
+            <i class="icon icon-friendship"></i>
+            
+            <span class="menu-title">Links</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">About</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/langgithub" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
+
+    </nav>
+  </div>
+</header>
+
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    
+      <div class="widget">
+    <h3 class="widget-title">Board</h3>
+    <div class="widget-body">
+        <div id="board">
+            <div class="content">
+                qq群号：906761431 </br> <img src="/img/WechatIMG156.png"/>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget-body">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">9</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/code-Android/">code-Android</a><span class="category-list-count">14</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/code-c/">code-c++</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/code-go/">code-go</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/code-ios/">code-ios</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/code-java/">code-java</a><span class="category-list-count">8</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/code-javascript/">code-javascript</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/code-python/">code-python</a><span class="category-list-count">18</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/区块链/">区块链</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/数据存储-bigdata/">数据存储-bigdata</a><span class="category-list-count">7</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/数据存储-mongodb/">数据存储-mongodb</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/数据存储-mysql/">数据存储-mysql</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/爬虫-Android逆向/">爬虫-Android逆向</a><span class="category-list-count">24</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/爬虫-js逆向/">爬虫-js逆向</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/爬虫-玄学/">爬虫-玄学</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/算法-NLP/">算法-NLP</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/算法-数据结构/">算法-数据结构</a><span class="category-list-count">7</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/算法-机器学习/">算法-机器学习</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/辅助工具/">辅助工具</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/面试/">面试</a><span class="category-list-count">12</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget-body">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/7z/">7z</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ARM/">ARM</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Activity/">Activity</a><span class="tag-list-count">8</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Ajax/">Ajax</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android/">Android</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android刷机/">Android刷机</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android加固/">Android加固</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android源码/">Android源码</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android签名/">Android签名</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android逆向/">Android逆向</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/IDA/">IDA</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Linux/">Linux</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/NLP/">NLP</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/WSGI/">WSGI</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/YouCompleteMe/">YouCompleteMe</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/c/">c++</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/frida/">frida</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/git/">git</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/go/">go</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/hadoop/">hadoop</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/hexo/">hexo</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/hook/">hook</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/http/">http</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/https/">https</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ios开发/">ios开发</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/java/">java</a><span class="tag-list-count">8</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/javascript/">javascript</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/jvm/">jvm</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/linux/">linux</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/linux操作系统/">linux操作系统</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/maven/">maven</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mongodb/">mongodb</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mysql/">mysql</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ndk/">ndk</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/netty/">netty</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ptrace/">ptrace</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/python/">python</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/python源码阅读/">python源码阅读</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/so/">so</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/sublime-text3/">sublime text3</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/tar/">tar</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/vim/">vim</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/xposed/">xposed</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/zip/">zip</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/区块链/">区块链</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/手机群控/">手机群控</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/操作系统/">操作系统</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/数据库/">数据库</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/数据结构/">数据结构</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/文件结构/">文件结构</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/机器学习/">机器学习</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/案例/">案例</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/滑块验证码/">滑块验证码</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/爬虫/">爬虫</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/简单图形验证码/">简单图形验证码</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/算法/">算法</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/线性代数/">线性代数</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/统计/">统计</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/脱壳/">脱壳</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/自动化/">自动化</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/计算机网络原理/">计算机网络原理</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/锁/">锁</a><span class="tag-list-count">1</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget-body tagcloud">
+      <a href="/tags/7z/" style="font-size: 13px;">7z</a> <a href="/tags/ARM/" style="font-size: 13px;">ARM</a> <a href="/tags/Activity/" style="font-size: 13.6px;">Activity</a> <a href="/tags/Ajax/" style="font-size: 13px;">Ajax</a> <a href="/tags/Android/" style="font-size: 13px;">Android</a> <a href="/tags/Android刷机/" style="font-size: 13.1px;">Android刷机</a> <a href="/tags/Android加固/" style="font-size: 13px;">Android加固</a> <a href="/tags/Android源码/" style="font-size: 13.9px;">Android源码</a> <a href="/tags/Android签名/" style="font-size: 13px;">Android签名</a> <a href="/tags/Android逆向/" style="font-size: 13.1px;">Android逆向</a> <a href="/tags/IDA/" style="font-size: 13px;">IDA</a> <a href="/tags/Linux/" style="font-size: 13.7px;">Linux</a> <a href="/tags/NLP/" style="font-size: 13.3px;">NLP</a> <a href="/tags/WSGI/" style="font-size: 13px;">WSGI</a> <a href="/tags/YouCompleteMe/" style="font-size: 13px;">YouCompleteMe</a> <a href="/tags/c/" style="font-size: 13px;">c++</a> <a href="/tags/frida/" style="font-size: 13px;">frida</a> <a href="/tags/git/" style="font-size: 13px;">git</a> <a href="/tags/go/" style="font-size: 13px;">go</a> <a href="/tags/hadoop/" style="font-size: 13.5px;">hadoop</a> <a href="/tags/hexo/" style="font-size: 13px;">hexo</a> <a href="/tags/hook/" style="font-size: 13px;">hook</a> <a href="/tags/http/" style="font-size: 13.1px;">http</a> <a href="/tags/https/" style="font-size: 13px;">https</a> <a href="/tags/ios开发/" style="font-size: 13px;">ios开发</a> <a href="/tags/java/" style="font-size: 13.6px;">java</a> <a href="/tags/javascript/" style="font-size: 13px;">javascript</a> <a href="/tags/jvm/" style="font-size: 13px;">jvm</a> <a href="/tags/linux/" style="font-size: 13.1px;">linux</a> <a href="/tags/linux操作系统/" style="font-size: 13px;">linux操作系统</a> <a href="/tags/maven/" style="font-size: 13px;">maven</a> <a href="/tags/mongodb/" style="font-size: 13px;">mongodb</a> <a href="/tags/mysql/" style="font-size: 13.3px;">mysql</a> <a href="/tags/ndk/" style="font-size: 13.1px;">ndk</a> <a href="/tags/netty/" style="font-size: 13.1px;">netty</a> <a href="/tags/ptrace/" style="font-size: 13.2px;">ptrace</a> <a href="/tags/python/" style="font-size: 13.8px;">python</a> <a href="/tags/python源码阅读/" style="font-size: 13.5px;">python源码阅读</a> <a href="/tags/so/" style="font-size: 14px;">so</a> <a href="/tags/sublime-text3/" style="font-size: 13px;">sublime text3</a> <a href="/tags/tar/" style="font-size: 13px;">tar</a> <a href="/tags/vim/" style="font-size: 13px;">vim</a> <a href="/tags/xposed/" style="font-size: 13.1px;">xposed</a> <a href="/tags/zip/" style="font-size: 13px;">zip</a> <a href="/tags/区块链/" style="font-size: 13.2px;">区块链</a> <a href="/tags/手机群控/" style="font-size: 13px;">手机群控</a> <a href="/tags/操作系统/" style="font-size: 13px;">操作系统</a> <a href="/tags/数据库/" style="font-size: 13px;">数据库</a> <a href="/tags/数据结构/" style="font-size: 13.5px;">数据结构</a> <a href="/tags/文件结构/" style="font-size: 13px;">文件结构</a> <a href="/tags/机器学习/" style="font-size: 13.2px;">机器学习</a> <a href="/tags/案例/" style="font-size: 13px;">案例</a> <a href="/tags/滑块验证码/" style="font-size: 13px;">滑块验证码</a> <a href="/tags/爬虫/" style="font-size: 13px;">爬虫</a> <a href="/tags/简单图形验证码/" style="font-size: 13.1px;">简单图形验证码</a> <a href="/tags/算法/" style="font-size: 13.4px;">算法</a> <a href="/tags/线性代数/" style="font-size: 13px;">线性代数</a> <a href="/tags/统计/" style="font-size: 13px;">统计</a> <a href="/tags/脱壳/" style="font-size: 13.5px;">脱壳</a> <a href="/tags/自动化/" style="font-size: 13.1px;">自动化</a> <a href="/tags/计算机网络原理/" style="font-size: 13px;">计算机网络原理</a> <a href="/tags/锁/" style="font-size: 13px;">锁</a>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Archive</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/06/">June 2020</a><span class="archive-list-count">135</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/面试/">面试</a>
+              </p>
+              <p class="item-title">
+                <a href="/2020/06/09/链表相关题/" class="title">链表相关题</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2020-06-09T09:29:21.397Z" itemprop="datePublished">2020-06-09</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/算法-数据结构/">算法-数据结构</a>
+              </p>
+              <p class="item-title">
+                <a href="/2020/06/09/递归算法/" class="title">递归算法</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2020-06-09T09:29:21.396Z" itemprop="datePublished">2020-06-09</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/算法-数据结构/">算法-数据结构</a>
+              </p>
+              <p class="item-title">
+                <a href="/2020/06/09/贪心算法/" class="title">贪心算法</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2020-06-09T09:29:21.396Z" itemprop="datePublished">2020-06-09</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/面试/">面试</a>
+              </p>
+              <p class="item-title">
+                <a href="/2020/06/09/计算机网络原理/" class="title">计算机网络原理</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2020-06-09T09:29:21.396Z" itemprop="datePublished">2020-06-09</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/爬虫-Android逆向/">爬虫-Android逆向</a>
+              </p>
+              <p class="item-title">
+                <a href="/2020/06/09/逆向-ARM指令/" class="title">逆向-ARM指令</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2020-06-09T09:29:21.396Z" itemprop="datePublished">2020-06-09</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-Android源码(6)-Android消息机制" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Android源码(6)-Android消息机制
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/2020/06/09/Android源码(6)-Android消息机制/" class="article-date">
+	  <time datetime="2020-06-09T09:29:21.365Z" itemprop="datePublished">2020-06-09</time>
+	</a>
+</span>
+        
+  <span class="article-category">
+    <i class="icon icon-folder"></i>
+    <a class="article-category-link" href="/categories/code-Android/">code-Android</a>
+  </span>
+
+        
+  <span class="article-tag">
+    <i class="icon icon-tags"></i>
+	<a class="article-tag-link" href="/tags/Android源码/">Android源码</a>
+  </span>
+
+
+        
+
+	<span class="article-read hidden-xs">
+    	<i class="icon icon-eye-fill" aria-hidden="true"></i>
+    	<span id="/2020/06/09/Android源码(6)-Android消息机制/" class="leancloud_visitors"  data-flag-title="Android源码(6)-Android消息机制">0</span>
+    </span>
+
+
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/2020/06/09/Android源码(6)-Android消息机制/#comments" class="article-comment-link">Comments</a></span>
+        
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <p>本文介绍Android的消息机制。</p>
+<p>一、引言<br>假设现在我们有这样的需求，点一下图中的button，然后去获取一些数据（假设这个步骤是一个耗时的操作），然后获取完后将得到的数据返回显示到屏幕上。<br>为了避免产生ANR(Application Not Response)问题，通常我们会在新的线程去做耗时的操作，然后在UI线程里面更新组件，所以Handler就是类似这样子一个机制。</p>
+<p><img src="/img/android-looper-handler-message-01.png" alt="1"></p>
+<p>那么我们会怎么去实现呢？可以参考如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line">public class TestDriverActivity extends Activity &#123;</span><br><span class="line">    @Override</span><br><span class="line">    protected void onCreate(Bundle savedInstanceState)&#123;</span><br><span class="line">        super.onCreate(savedInstanceState);</span><br><span class="line">        setContentView(R.layout.activity_main);</span><br><span class="line">        tv = (TextView)findViewById(R.id.tv);</span><br><span class="line">        btn = (Button)findViewById(R.id.btn);</span><br><span class="line">        // 接收并处理消息</span><br><span class="line">        mHandler = new Handler()&#123;</span><br><span class="line">            @Override</span><br><span class="line">            public void handleMessage(Message msg)&#123;</span><br><span class="line">                if (message.what == 0x11)&#123;</span><br><span class="line">                    Toast.makeText(getApplicationContext(), &quot;mHandler handleMessage&quot; );</span><br><span class="line">                    tv.setText(&quot;mHandler is receive message&quot;)</span><br><span class="line">                &#125;</span><br><span class="line">                </span><br><span class="line">            &#125;</span><br><span class="line">        &#125;;</span><br><span class="line">        // 监听</span><br><span class="line">        btn.setOnClickListener(new View.onClickListener()&#123;</span><br><span class="line">            @Override</span><br><span class="line">            public void onClick(View v)&#123;</span><br><span class="line">                MyThread t = new MyThread(mHandler);</span><br><span class="line">                t.start();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">class MyThread extends Thread&#123;</span><br><span class="line">    Handler handler;</span><br><span class="line">    public MyThread(Handler handler) &#123;</span><br><span class="line">        super();</span><br><span class="line">        this.handler = handler;</span><br><span class="line">    &#125;</span><br><span class="line">    @Override</span><br><span class="line">    public void run()&#123;</span><br><span class="line">        super.run();</span><br><span class="line">        mHandler.sendEmptyMessage(0x11);  //发送消息</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>这只是一种实现的方式，如果在子线程而不是ui线程去初始化handler，则需要初始化handler前调用Looper.prepare()，初始化结束后调用Looper.loop()。</p>
+<p>二、相关概念<br>学习Android的消息处理机制，有几个概念（类）必须了解：</p>
+<ol>
+<li>Message<br>消息，理解为线程间通讯的数据单元。例如后台线程在处理数据完毕后需要更新UI，则可发送一条包含更新信息的Message给UI线程。</li>
+<li>Message Queue<br>消息队列，用来存放通过Handler发布的消息，按照先进先出执行。</li>
+<li>Handler<br>Handler是Message的主要处理者，负责将Message添加到消息队列以及对消息队列中的Message进行处理。</li>
+<li>Looper<br>循环器，扮演Message Queue和Handler之间桥梁的角色，循环取出Message Queue里面的Message，并交付给相应的Handler进行处理。<br>Thread<br>5.UI thread 通常就是main thread，而Android启动程序时会替它建立一个Message Queue。<br>每一个线程里可含有一个Looper对象以及一个MessageQueue数据结构。在你的应用程序里，可以定义Handler的子类别来接收Looper所送出的消息。<br>三、Looper<br>Looper被设计用来使一个普通线程变成Looper线程。所谓Looper线程就是循环工作的线程。在程序开发中（尤其是GUI开发中），我们经常会需要一个线程不断循环，一旦有新任务则执行，执行完继续等待下一个任务，这就是Looper线程。使用Looper类创建Looper线程很简单：</li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">public class LooperThread extends Thread &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public void run() &#123;</span><br><span class="line">        // 将当前线程初始化为Looper线程</span><br><span class="line">        Looper.prepare();</span><br><span class="line">        </span><br><span class="line">        // ...其他处理，如实例化handler</span><br><span class="line">        </span><br><span class="line">        // 开始循环处理消息队列</span><br><span class="line">        Looper.loop();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>3.1 Looper.prepare()<br>当执行了Looper.prepare()后，当前线程就会升级为Looper线程：</p>
+<p><img src="/img/android-looper-prepare.png" alt="2"></p>
+<p>一个Thread只能有一个Looper对象<br>线程中有一个Looper对象，它的内部维护了一个消息队列MessageQueue<br>3.2 Looper.loop()<br>当调用loop方法后，Looper线程就开始真正工作了，它不断从自己的MQ中取出队头的消息(也叫任务)执行。</p>
+<p><img src="/img/android-looper-loop.png" alt="3"></p>
+<p>那么，我们如何往MQ上添加消息呢？下面有请Handler</p>
+<p>四、Handler<br>Handler扮演了往MQ上添加消息和处理消息的角色（只处理由自己发出的消息），即往MQ上添加消息的时候执行sendMessage，并在loop到自己的时候处理消息执行handleMessage，整个过程是异步的。</p>
+<p>Handler创建时会关联一个looper，默认关联当前线程的looper。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">public class LooperThread extends Thread &#123;</span><br><span class="line">    private Handler handler1;</span><br><span class="line">    private Handler handler2;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public void run() &#123;</span><br><span class="line">        // 将当前线程初始化为Looper线程</span><br><span class="line">        Looper.prepare();</span><br><span class="line"></span><br><span class="line">        // 实例化两个handler</span><br><span class="line">        handler1 = new Handler(); </span><br><span class="line">        handler2 = new Handler();</span><br><span class="line"></span><br><span class="line">        // 开始循环处理消息队列</span><br><span class="line">        Looper.loop();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>加入Handler后结构图如下：</p>
+<p><img src="/img/android-looper-handler-2.png" alt="4"></p>
+<p>一个线程可以有多个Handler，但是只能有一个Looper。</p>
+<p>4.1 Handler发送消息和处理消息<br>大致流程：</p>
+<p>mHandler.sendMessage()发送消息到MQ<br>Looper.loop()将message不断从MQ从取出来交给handler处理<br>mHandler.handleMessage()处理消息</p>
+<p><img src="/img/android-handler-send-handle-msg.png" alt="5"></p>
+<p>五、回顾<br>那么回到一开始我们举的例子，在非UI线程去做耗时的操作，然后完成后在UI线程更新UI信息。那么这种case下，我们的结构图是这样的：</p>
+<p><img src="/img/android-ui-thread-handler.png" alt="6"></p>
+<p>至此，本文介绍的内容已经完成，本文内容大部分非原创，更多的是基于其他博客的和自己理解的总结，好记性不如烂笔头。如果需要了解源码的同学，可以继续深入阅读研究，包括Java层Looper，Handler，Message，MessageQueue的源码和Native层Looper，NativeMessageQueue的源码实现。</p>
+
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="https://langgithub.github.io/2020/06/09/Android源码(6)-Android消息机制/" title="Android源码(6)-Android消息机制" target="_blank" rel="external">https://langgithub.github.io/2020/06/09/Android源码(6)-Android消息机制/</a>
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN协议</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+
+<div class="panel panel-default panel-badger">
+  <div class="panel-body">
+    <figure class="media">
+      <div class="media-left">
+        <a href="https://github.com/langgithub" target="_blank" class="img-burn thumb-sm visible-lg">
+          <img src="/images/avatar.jpg" class="img-rounded w-full" alt="">
+        </a>
+      </div>
+      <div class="media-body">
+        <h3 class="media-heading"><a href="https://github.com/langgithub" target="_blank"><span class="text-dark">yuanlang</span><small class="ml-1x">Python</small></a></h3>
+        <div>本人毕业于四川文理学院。目前从事网络爬虫，Android逆向方面工作，也热衷于算法与数据分析。</div>
+      </div>
+    </figure>
+  </div>
+</div>
+
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+      
+      <div id="vcomment" class="comment"></div> 
+      <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+      <script src="//unpkg.com/valine/dist/Valine.min.js"></script>
+      <script>
+         var notify = 'false' == true ? true : false;
+         var verify = 'false' == true ? true : false;
+          window.onload = function() {
+              new Valine({
+                  el: '.comment',
+                  notify: notify,
+                  verify: verify,
+                  app_id: "eMPxlnHK3gsE9VV9ehB05y5C-gzGzoHsz",
+                  app_key: "h5S0YSOKqe4rF8HMVfJqruw7",
+                  placeholder: "ヾﾉ≧∀≦)o来啊，快活啊!",
+                  avatar:"mm"
+              });
+          }
+      </script>
+      
+    
+  </section>
+
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    <li class="prev">
+      <a href="/2020/06/09/Android源码(7)-Android系统build阶段签名机制/" title="Android源码(7)-Android系统build阶段签名机制"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;Newer</span></a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/2020/06/09/Android源码(4)-应用程序安装流程/" title="Android源码(4)-应用程序安装流程"><span>Older&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+  </ul>
+  
+  
+  <!-- Button trigger modal -->
+  <button type="button" class="btn btn-fancy btn-donate pop-onhover bg-gradient-warning" data-toggle="modal" data-target="#donateModal"><span>$</span></button>
+  <!-- <div class="wave-icon wave-icon-danger btn-donate" data-toggle="modal" data-target="#donateModal">
+    <div class="wave-circle"><span class="icon"><i class="icon icon-bill"></i></span></div>
+  </div> -->
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,qq,wechat,facebook,twitter" data-mobile-sites="weibo,qq,qzone"></div>
+    
+  </div>
+  </div>
+</nav>
+  
+<!-- Modal -->
+<div class="modal modal-center modal-small modal-xs-full fade" id="donateModal" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content donate">
+      <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+      <div class="modal-body">
+        <div class="donate-box">
+          <div class="donate-head">
+            <p>Maybe you could buy me a cup of coffee.</p>
+          </div>
+          <div class="tab-content">
+            <div role="tabpanel" class="tab-pane fade active in" id="alipay">
+              <div class="donate-payimg">
+                <img src="/images/donate/alipayimg.png" alt="Scan Qrcode" title="Scan" />
+              </div>
+              <p class="text-muted mv">Scan this qrcode</p>
+              <p class="text-grey">Open alipay app scan this qrcode, buy me a coffee!</p>
+            </div>
+            <div role="tabpanel" class="tab-pane fade" id="wechatpay">
+              <div class="donate-payimg">
+                <img src="/images/donate/wechatpayimg.png" alt="Scan Qrcode" title="Scan" />
+              </div>
+              <p class="text-muted mv">Scan this qrcode</p>
+              <p class="text-grey">Open wechat app scan this qrcode, buy me a coffee!</p>
+            </div>
+          </div>
+          <div class="donate-footer">
+            <ul class="nav nav-tabs nav-justified" role="tablist">
+              <li role="presentation" class="active">
+                <a href="#alipay" id="alipay-tab" role="tab" data-toggle="tab" aria-controls="alipay" aria-expanded="true"><i class="icon icon-alipay"></i> alipay</a>
+              </li>
+              <li role="presentation" class="">
+                <a href="#wechatpay" role="tab" id="wechatpay-tab" data-toggle="tab" aria-controls="wechatpay" aria-expanded="false"><i class="icon icon-wepay"></i> wechat payment</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/langgithub" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
+
+    <div class="copyright">
+    	
+        <div class="publishby">
+        	Theme by <a href="https://github.com/cofess" target="_blank"> cofess </a>base on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+        </div>
+    </div>
+</footer>
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+<script>
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+</script>
+<script src="/js/plugin.min.js"></script>
+<script src="/js/application.js"></script>
+
+    <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: 'Posts',
+            PAGES: 'Pages',
+            CATEGORIES: 'Categories',
+            TAGS: 'Tags',
+            UNTITLED: '(Untitled)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+<script src="/js/insight.js"></script>
+
+
+
+
+
+   
+
+
+<!-- custom analytics part create by xiamo -->
+<script defer src="https://cdn1.lncld.net/static/js/av-min-1.2.1.js"></script>
+<script defer>
+AV.init({
+  appId: 'eMPxlnHK3gsE9VV9ehB05y5C-gzGzoHsz',
+  appKey: 'h5S0YSOKqe4rF8HMVfJqruw7'
+});
+
+function showTime(Counter) {
+	var query = new AV.Query(Counter);
+		var visitors= $('.leancloud_visitors');
+		query.greaterThanOrEqualTo("time", 0);		
+		query.find({
+			success: function(results) {
+				if (results.length == 0) {				
+					return;
+				}
+				var data = results;
+				visitors.each(function(){
+					var url = $(this).attr('id').trim();					
+					for (var i = 0; i < data.length; i++) {
+						var object = data[i];
+						var content = object.get('time');
+						var _url = object.get('url')
+						if(url == _url){
+							$(this).text(content);
+						}
+					}
+				})
+				
+			},
+			error: function(object, error) {
+				console.log("Error: " + error.code + " " + error.message);
+			}
+		});
+}
+
+function addCount(Counter) {
+	var Counter = AV.Object.extend("Counter");
+	url = $(".leancloud_visitors").attr('id').trim();
+	title = $(".leancloud_visitors").attr('data-flag-title').trim();
+	var query = new AV.Query(Counter);
+	query.equalTo("url", url);
+	query.find({
+		success: function(results) {
+			if (results.length > 0) {
+				var counter = results[0];
+				counter.fetchWhenSave(true);
+				counter.increment("time");
+				counter.save(null, {
+					success: function(counter) {
+						var content = counter.get('time');
+						$(document.getElementById(url)).text(content);
+					},
+					error: function(counter, error) {
+						console.log('Failed to save Visitor num, with error message: ' + error.message);
+					}
+				});
+			} else {
+				var newcounter = new Counter();
+				newcounter.set("title", title);
+				newcounter.set("url", url);
+				newcounter.set("time", 1);
+				newcounter.save(null, {
+					success: function(newcounter) {
+					    console.log("newcounter.get('time')="+newcounter.get('time'));
+						var content = newcounter.get('time');
+						$(document.getElementById(url)).text(content);
+					},
+					error: function(newcounter, error) {
+						console.log('Failed to create');
+					}
+				});
+			}
+		},
+		error: function(error) {
+			console.log('Error:' + error.code + " " + error.message);
+		}
+	});
+}
+$(function() {
+	var Counter = AV.Object.extend("Counter");
+	if ($('.leancloud_visitors').length == 1) {
+		addCount(Counter);
+	} else {
+		showTime(Counter);
+	}
+}); 
+</script>
+
+
+
+   
+    
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/valine"></script>
+  <script type="text/javascript">
+  var GUEST = ['nick', 'mail', 'link'];
+  var meta = 'nick,mail,link';
+  meta = meta.split(',').filter(function(item) {
+    return GUEST.indexOf(item) > -1;
+  });
+  new Valine({
+    el: '#vcomments',
+    verify: false,
+    notify: false,
+    appId: '',
+    appKey: '',
+    placeholder: 'Just go go',
+    avatar: 'mm',
+    meta: meta,
+    pageSize: '10' || 10,
+    visitor: false
+  });
+  </script>
+
+     
+
+
+
+
+
+
+
+</body>
+</html>

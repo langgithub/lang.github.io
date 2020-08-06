@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform">
+  <meta http-equiv="Cache-Control" content="no-siteapp">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000">
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top">
+  
+  
+  <title>Android脱壳系列-背景 | Hexo</title>
+  <meta name="description" content="背景 app存在的危险 代码修改（广告植入，替换广告id） 资源修改（界面替换广告，链接替换） 破解（应用收费，内购） 篡改数据（无效金币，砖石） 加入恶意代码（木马，隐私，交易） 动态注入，数据拦截，窃取，修改 协议修改  加固目的 需要防止逆向分析（防逆向）–防止核心代码被反编译 控制二次打包（防篡改）– 校验完整性，签名，防止盗版 防止调试和注入（防调试）–防止动态调试，注入获取关键数据 防">
+<meta name="keywords" content="so,脱壳">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Android脱壳系列-背景">
+<meta property="og:url" content="https://langgithub.github.io/2020/06/09/Android脱壳系列-背景/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="背景 app存在的危险 代码修改（广告植入，替换广告id） 资源修改（界面替换广告，链接替换） 破解（应用收费，内购） 篡改数据（无效金币，砖石） 加入恶意代码（木马，隐私，交易） 动态注入，数据拦截，窃取，修改 协议修改  加固目的 需要防止逆向分析（防逆向）–防止核心代码被反编译 控制二次打包（防篡改）– 校验完整性，签名，防止盗版 防止调试和注入（防调试）–防止动态调试，注入获取关键数据 防">
+<meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2020-06-09T09:29:21.367Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Android脱壳系列-背景">
+<meta name="twitter:description" content="背景 app存在的危险 代码修改（广告植入，替换广告id） 资源修改（界面替换广告，链接替换） 破解（应用收费，内购） 篡改数据（无效金币，砖石） 加入恶意代码（木马，隐私，交易） 动态注入，数据拦截，窃取，修改 协议修改  加固目的 需要防止逆向分析（防逆向）–防止核心代码被反编译 控制二次打包（防篡改）– 校验完整性，签名，防止盗版 防止调试和注入（防调试）–防止动态调试，注入获取关键数据 防">
+  <!-- Canonical links -->
+  <link rel="canonical" href="https://langgithub.github.io/2020/06/09/Android脱壳系列-背景/index.html">
+  
+    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  <link rel="stylesheet" href="/css/style.css">
+  
+  
+  
+  
+</head>
+
+
+<body class="main-center" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="https://github.com/langgithub" target="_blank">
+          <img class="img-circle img-rotate" src="/images/avatar.jpg" width="200" height="200">
+        </a>
+        <h2 id="name" class="hidden-xs hidden-sm">yuanlang</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md">Python</h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Beijing, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
+
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="Search" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="Type something..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+    </div>
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
+</div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav ">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">Home</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">Archives</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">Categories</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">Tags</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-repository">
+          <a href="/repository">
+            
+            <i class="icon icon-project"></i>
+            
+            <span class="menu-title">Repository</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-books">
+          <a href="/books">
+            
+            <i class="icon icon-book-fill"></i>
+            
+            <span class="menu-title">Books</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-links">
+          <a href="/links">
+            
+            <i class="icon icon-friendship"></i>
+            
+            <span class="menu-title">Links</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">About</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/langgithub" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
+
+    </nav>
+  </div>
+</header>
+
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    
+      <div class="widget">
+    <h3 class="widget-title">Board</h3>
+    <div class="widget-body">
+        <div id="board">
+            <div class="content">
+                qq群号：906761431 </br> <img src="/img/WechatIMG156.png"/>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget-body">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">9</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/code-Android/">code-Android</a><span class="category-list-count">14</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/code-c/">code-c++</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/code-go/">code-go</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/code-ios/">code-ios</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/code-java/">code-java</a><span class="category-list-count">8</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/code-javascript/">code-javascript</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/code-python/">code-python</a><span class="category-list-count">18</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/区块链/">区块链</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/数据存储-bigdata/">数据存储-bigdata</a><span class="category-list-count">7</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/数据存储-mongodb/">数据存储-mongodb</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/数据存储-mysql/">数据存储-mysql</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/爬虫-Android逆向/">爬虫-Android逆向</a><span class="category-list-count">24</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/爬虫-js逆向/">爬虫-js逆向</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/爬虫-玄学/">爬虫-玄学</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/算法-NLP/">算法-NLP</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/算法-数据结构/">算法-数据结构</a><span class="category-list-count">7</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/算法-机器学习/">算法-机器学习</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/辅助工具/">辅助工具</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/面试/">面试</a><span class="category-list-count">12</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget-body">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/7z/">7z</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ARM/">ARM</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Activity/">Activity</a><span class="tag-list-count">8</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Ajax/">Ajax</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android/">Android</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android刷机/">Android刷机</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android加固/">Android加固</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android源码/">Android源码</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android签名/">Android签名</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android逆向/">Android逆向</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/IDA/">IDA</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Linux/">Linux</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/NLP/">NLP</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/WSGI/">WSGI</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/YouCompleteMe/">YouCompleteMe</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/c/">c++</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/frida/">frida</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/git/">git</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/go/">go</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/hadoop/">hadoop</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/hexo/">hexo</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/hook/">hook</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/http/">http</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/https/">https</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ios开发/">ios开发</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/java/">java</a><span class="tag-list-count">8</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/javascript/">javascript</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/jvm/">jvm</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/linux/">linux</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/linux操作系统/">linux操作系统</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/maven/">maven</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mongodb/">mongodb</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mysql/">mysql</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ndk/">ndk</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/netty/">netty</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ptrace/">ptrace</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/python/">python</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/python源码阅读/">python源码阅读</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/so/">so</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/sublime-text3/">sublime text3</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/tar/">tar</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/vim/">vim</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/xposed/">xposed</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/zip/">zip</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/区块链/">区块链</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/手机群控/">手机群控</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/操作系统/">操作系统</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/数据库/">数据库</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/数据结构/">数据结构</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/文件结构/">文件结构</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/机器学习/">机器学习</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/案例/">案例</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/滑块验证码/">滑块验证码</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/爬虫/">爬虫</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/简单图形验证码/">简单图形验证码</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/算法/">算法</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/线性代数/">线性代数</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/统计/">统计</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/脱壳/">脱壳</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/自动化/">自动化</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/计算机网络原理/">计算机网络原理</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/锁/">锁</a><span class="tag-list-count">1</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget-body tagcloud">
+      <a href="/tags/7z/" style="font-size: 13px;">7z</a> <a href="/tags/ARM/" style="font-size: 13px;">ARM</a> <a href="/tags/Activity/" style="font-size: 13.6px;">Activity</a> <a href="/tags/Ajax/" style="font-size: 13px;">Ajax</a> <a href="/tags/Android/" style="font-size: 13px;">Android</a> <a href="/tags/Android刷机/" style="font-size: 13.1px;">Android刷机</a> <a href="/tags/Android加固/" style="font-size: 13px;">Android加固</a> <a href="/tags/Android源码/" style="font-size: 13.9px;">Android源码</a> <a href="/tags/Android签名/" style="font-size: 13px;">Android签名</a> <a href="/tags/Android逆向/" style="font-size: 13.1px;">Android逆向</a> <a href="/tags/IDA/" style="font-size: 13px;">IDA</a> <a href="/tags/Linux/" style="font-size: 13.7px;">Linux</a> <a href="/tags/NLP/" style="font-size: 13.3px;">NLP</a> <a href="/tags/WSGI/" style="font-size: 13px;">WSGI</a> <a href="/tags/YouCompleteMe/" style="font-size: 13px;">YouCompleteMe</a> <a href="/tags/c/" style="font-size: 13px;">c++</a> <a href="/tags/frida/" style="font-size: 13px;">frida</a> <a href="/tags/git/" style="font-size: 13px;">git</a> <a href="/tags/go/" style="font-size: 13px;">go</a> <a href="/tags/hadoop/" style="font-size: 13.5px;">hadoop</a> <a href="/tags/hexo/" style="font-size: 13px;">hexo</a> <a href="/tags/hook/" style="font-size: 13px;">hook</a> <a href="/tags/http/" style="font-size: 13.1px;">http</a> <a href="/tags/https/" style="font-size: 13px;">https</a> <a href="/tags/ios开发/" style="font-size: 13px;">ios开发</a> <a href="/tags/java/" style="font-size: 13.6px;">java</a> <a href="/tags/javascript/" style="font-size: 13px;">javascript</a> <a href="/tags/jvm/" style="font-size: 13px;">jvm</a> <a href="/tags/linux/" style="font-size: 13.1px;">linux</a> <a href="/tags/linux操作系统/" style="font-size: 13px;">linux操作系统</a> <a href="/tags/maven/" style="font-size: 13px;">maven</a> <a href="/tags/mongodb/" style="font-size: 13px;">mongodb</a> <a href="/tags/mysql/" style="font-size: 13.3px;">mysql</a> <a href="/tags/ndk/" style="font-size: 13.1px;">ndk</a> <a href="/tags/netty/" style="font-size: 13.1px;">netty</a> <a href="/tags/ptrace/" style="font-size: 13.2px;">ptrace</a> <a href="/tags/python/" style="font-size: 13.8px;">python</a> <a href="/tags/python源码阅读/" style="font-size: 13.5px;">python源码阅读</a> <a href="/tags/so/" style="font-size: 14px;">so</a> <a href="/tags/sublime-text3/" style="font-size: 13px;">sublime text3</a> <a href="/tags/tar/" style="font-size: 13px;">tar</a> <a href="/tags/vim/" style="font-size: 13px;">vim</a> <a href="/tags/xposed/" style="font-size: 13.1px;">xposed</a> <a href="/tags/zip/" style="font-size: 13px;">zip</a> <a href="/tags/区块链/" style="font-size: 13.2px;">区块链</a> <a href="/tags/手机群控/" style="font-size: 13px;">手机群控</a> <a href="/tags/操作系统/" style="font-size: 13px;">操作系统</a> <a href="/tags/数据库/" style="font-size: 13px;">数据库</a> <a href="/tags/数据结构/" style="font-size: 13.5px;">数据结构</a> <a href="/tags/文件结构/" style="font-size: 13px;">文件结构</a> <a href="/tags/机器学习/" style="font-size: 13.2px;">机器学习</a> <a href="/tags/案例/" style="font-size: 13px;">案例</a> <a href="/tags/滑块验证码/" style="font-size: 13px;">滑块验证码</a> <a href="/tags/爬虫/" style="font-size: 13px;">爬虫</a> <a href="/tags/简单图形验证码/" style="font-size: 13.1px;">简单图形验证码</a> <a href="/tags/算法/" style="font-size: 13.4px;">算法</a> <a href="/tags/线性代数/" style="font-size: 13px;">线性代数</a> <a href="/tags/统计/" style="font-size: 13px;">统计</a> <a href="/tags/脱壳/" style="font-size: 13.5px;">脱壳</a> <a href="/tags/自动化/" style="font-size: 13.1px;">自动化</a> <a href="/tags/计算机网络原理/" style="font-size: 13px;">计算机网络原理</a> <a href="/tags/锁/" style="font-size: 13px;">锁</a>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Archive</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/06/">June 2020</a><span class="archive-list-count">135</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/面试/">面试</a>
+              </p>
+              <p class="item-title">
+                <a href="/2020/06/09/链表相关题/" class="title">链表相关题</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2020-06-09T09:29:21.397Z" itemprop="datePublished">2020-06-09</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/算法-数据结构/">算法-数据结构</a>
+              </p>
+              <p class="item-title">
+                <a href="/2020/06/09/递归算法/" class="title">递归算法</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2020-06-09T09:29:21.396Z" itemprop="datePublished">2020-06-09</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/算法-数据结构/">算法-数据结构</a>
+              </p>
+              <p class="item-title">
+                <a href="/2020/06/09/贪心算法/" class="title">贪心算法</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2020-06-09T09:29:21.396Z" itemprop="datePublished">2020-06-09</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/面试/">面试</a>
+              </p>
+              <p class="item-title">
+                <a href="/2020/06/09/计算机网络原理/" class="title">计算机网络原理</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2020-06-09T09:29:21.396Z" itemprop="datePublished">2020-06-09</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/爬虫-Android逆向/">爬虫-Android逆向</a>
+              </p>
+              <p class="item-title">
+                <a href="/2020/06/09/逆向-ARM指令/" class="title">逆向-ARM指令</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2020-06-09T09:29:21.396Z" itemprop="datePublished">2020-06-09</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-Android脱壳系列-背景" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Android脱壳系列-背景
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/2020/06/09/Android脱壳系列-背景/" class="article-date">
+	  <time datetime="2020-06-09T09:29:21.367Z" itemprop="datePublished">2020-06-09</time>
+	</a>
+</span>
+        
+  <span class="article-category">
+    <i class="icon icon-folder"></i>
+    <a class="article-category-link" href="/categories/爬虫-Android逆向/">爬虫-Android逆向</a>
+  </span>
+
+        
+  <span class="article-tag">
+    <i class="icon icon-tags"></i>
+	<a class="article-tag-link" href="/tags/so/">so</a>, <a class="article-tag-link" href="/tags/脱壳/">脱壳</a>
+  </span>
+
+
+        
+
+	<span class="article-read hidden-xs">
+    	<i class="icon icon-eye-fill" aria-hidden="true"></i>
+    	<span id="/2020/06/09/Android脱壳系列-背景/" class="leancloud_visitors"  data-flag-title="Android脱壳系列-背景">0</span>
+    </span>
+
+
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/2020/06/09/Android脱壳系列-背景/#comments" class="article-comment-link">Comments</a></span>
+        
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <h3 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h3><ol>
+<li><p>app存在的危险<br> 代码修改（广告植入，替换广告id）<br> 资源修改（界面替换广告，链接替换）<br> 破解（应用收费，内购）<br> 篡改数据（无效金币，砖石）<br> 加入恶意代码（木马，隐私，交易）<br> 动态注入，数据拦截，窃取，修改<br> 协议修改</p>
+</li>
+<li><p>加固目的<br> 需要防止逆向分析（防逆向）–防止核心代码被反编译<br> 控制二次打包（防篡改）– 校验完整性，签名，防止盗版<br> 防止调试和注入（防调试）–防止动态调试，注入获取关键数据<br> 防止应用数据窃取（防窃取）– 加密敏感数据<br> 防止协议直接被盗刷–加密协议通信</p>
+</li>
+<li><p>常用加固方式<br> 类加载技术</p>
+<pre><code>针对apk中的classes.dex文件进行处理，放入特定的文件中，通过native代码来运行进行解密（爱加密，梆梆）
+</code></pre><p> 方法替换技术</p>
+<pre><code>将class.dex文件中的方法代码进行提取，抽取方法，在运行时对器进行动态解密还原
+</code></pre></li>
+<li><p>脱壳手法<br> 修改系统源码自动脱壳<br> 通过hook对关键函数进行脱壳<br> 开源工具zjdroid,dexhunter进行脱壳<br> 利用IDA或者GDB动态调试进行脱壳</p>
+</li>
+</ol>
+<h3 id="壳进化"><a href="#壳进化" class="headerlink" title="壳进化"></a>壳进化</h3><ol>
+<li><p>第一代壳 dex 加密<br> dex字符串加密<br> 资源加密<br> 对抗反调试<br> 反调试<br> 自定义dexClassLoader</p>
+</li>
+<li><p>第二代壳 dex抽取和so加固<br> dex代码抽取到外部<br> dex动态加载<br> so加密</p>
+</li>
+<li><p>第三代壳 dex动态解密和So混淆<br> dex代码动态解密<br> so代码混淆</p>
+</li>
+</ol>
+<h4 id="脱壳思路"><a href="#脱壳思路" class="headerlink" title="脱壳思路"></a>脱壳思路</h4><h5 id="第一代壳"><a href="#第一代壳" class="headerlink" title="第一代壳"></a>第一代壳</h5><pre><code>1. 内存dump，内存中寻址dex.035 或dex.036
+2. 文件监视法
+    dex优化生成odex
+    监视文件变化（notifywait-for-Android）
+    监视dexOpt输出（notifywait-for-Android）
+3. hook法
+    hook dvmDexFileOpenPartial
+4. 定制安卓系统
+</code></pre><h5 id="第二代壳"><a href="#第二代壳" class="headerlink" title="第二代壳"></a>第二代壳</h5><pre><code>1. hook dexFileParse  dexFileOpenFromMD
+2. 定制系统
+    dexHunter defineClassNative
+    绕过3进程反调试一系列系统源码
+    断点mmap, dexopt优化时，dvmContinueOptimization()-&gt;mmap()
+</code></pre><h5 id="第三代壳-方法指令抽取"><a href="#第三代壳-方法指令抽取" class="headerlink" title="第三代壳 方法指令抽取"></a>第三代壳 方法指令抽取</h5><p>dex2oat<br>    ART模式下，dex2oat生成oat时，内存中的dex是完整的<br>定制系统<br>    hook Dalvik_dalvik_system_DexFile_defineClassNative dexHunter<br>    枚举所有DexClassDef，对所有class,调用dvmDefineClass进行强制加载</p>
+<h5 id="第四代壳"><a href="#第四代壳" class="headerlink" title="第四代壳"></a>第四代壳</h5><p>so+vmp<br>动态调试+人肉还原</p>
+<h4 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h4><p>爱加密 脱壳点 dvmDexFileOpenPartial</p>
+<h4 id="壳特点"><a href="#壳特点" class="headerlink" title="壳特点"></a>壳特点</h4><p>(“libsecexe.so”, “梆梆加固免费版”);<br>(“libsecmain.so”, “梆梆加固免费版”);<br>(“libSecShell.so”, “梆梆加固免费版”);<br>(“secData0.jar”, “梆梆加固免费版”);<br>(“libSecShell-x86.so”, “梆梆加固免费版”);</p>
+<p>(“libDexHelper.so”, “梆梆企业版”);<br>(“libDexHelper-x86.so”, “梆梆企业版”);<br>(“classes.jar”, “梆梆加固定制版”);<br>(“DexHelper.so”, “梆梆加固定制版”);</p>
+<p>(“libtup.so”, “腾讯加固”);<br>(“libshell.so”, “腾讯加固”);<br>(“mix.dex”, “腾讯加固”);<br>(“mixz.dex”, “腾讯加固”);<br>(“libshella-xxxx.so”, “腾讯加固”);<br>(“libshellx-xxxx.so”, “腾讯加固”);</p>
+<p>(“libtosprotection.armeabi-v7a.so”, “腾讯御安全”);<br>(“libtosprotection.armeabi.so”, “腾讯御安全”);<br>(“libtosprotection.x86.so”, “腾讯御安全”);<br>(“tosversion”, “腾讯御安全”);<br>(“libTmsdk-xxx-mfr.so”, “腾讯御安全”);</p>
+<p>(“aliprotect.dat”, “阿里加固”);<br>(“libsgmain.so”, “阿里加固”);<br>(“libsgsecuritybody.so”, “阿里加固”);<br>(“libmobisec.so”, “阿里加固”);<br>(“libfakejni.so”, “阿里加固”);<br>(“libzuma.so”, “阿里加固”);<br>(“libzumadata.so”, “阿里加固”);<br>(“libpreverify1.so”, “阿里加固”);</p>
+<p>(“kdpdata.so”, “几维加固”);<br>(“dex.dat”, “几维加固”);<br>(“libkdp.so”, “几维加固”);<br>(“libkwscmm.so”, “几维加固”);<br>(“libkwscr.so”, “几维加固”);<br>(“libkwslinker.so”, “几维加固”);</p>
+<p>(“libexec.so”, “爱加密”);<br>(“libexecmain.so”, “爱加密”);<br>(“ijiami.dat”, “爱加密”);<br>(“ijiami.ajm”, “爱加密”);<br>(“af.bin”, “爱加密”);<br>(“signed.bin”, “爱加密”);</p>
+<p>(“libchaosvmp.so”, “娜迦”);<br>(“libddog.so”, “娜迦”);<br>(“libfdog.so”, “娜迦”);<br>(“libedog.so”, “娜迦”);</p>
+<p>(“libprotectClass.so”, “360加固”);<br>(“libjiagu.so”, “360加固”);<br>(“libjiagu_art.so”, “360加固”);<br>(“libjiagu_x86.so”, “360加固”);</p>
+<p>(“libcmvmp.so”, “中国移动安全加固”);<br>(“libmogosec_dex.so”, “中国移动安全加固”);<br>(“libmogosec_sodecrypt.so”, “中国移动安全加固”);<br>(“libmogosecurity.so”, “中国移动安全加固”);</p>
+<p>(“libbaiduprotect.so”, “百度加固”);<br>(“baiduprotect1.jar”, “百度加固”);<br>(“baiduprotect.jar”, “百度加固”);</p>
+<p>(“libuusafe.jar.so”, “UU安全加固”);<br>(“libuusafe.so”, “UU安全加固”);<br>(“libuusafeempty.so”, “UU安全加固”);</p>
+<p>(“dp.arm-v7.so.dat”, “DexProtect加固”);<br>(“dp.arm.so.dat”, “DexProtect加固”);</p>
+<p>(“libegis.so”, “通付盾加固”);<br>(“libNSaferOnly.so”, “通付盾加固”);</p>
+<p>(“libreincp.so”, “珊瑚灵御加固”);<br>(“libreincp_x86.so”, “珊瑚灵御加固”);</p>
+<p>(“libnqshield.so”, “网秦加固”);</p>
+<p>(“libnesec.so”, “网易易盾”);</p>
+<p>(“libAPKProtect.so”, “APKProtect加固”);</p>
+<p>(“libx3g.so”, “顶象技术加固”);</p>
+<p>(“libitsec.so”, “海云安加固”);</p>
+<p>(“libapssec.so”, “盛大加固”);</p>
+<p>(“librsprotect.so”, “瑞星加固”);</p>
+<p>(“libapktoolplus_jiagu.so”, “apktoolplus加固”);</p>
+
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="https://langgithub.github.io/2020/06/09/Android脱壳系列-背景/" title="Android脱壳系列-背景" target="_blank" rel="external">https://langgithub.github.io/2020/06/09/Android脱壳系列-背景/</a>
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN协议</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+
+<div class="panel panel-default panel-badger">
+  <div class="panel-body">
+    <figure class="media">
+      <div class="media-left">
+        <a href="https://github.com/langgithub" target="_blank" class="img-burn thumb-sm visible-lg">
+          <img src="/images/avatar.jpg" class="img-rounded w-full" alt="">
+        </a>
+      </div>
+      <div class="media-body">
+        <h3 class="media-heading"><a href="https://github.com/langgithub" target="_blank"><span class="text-dark">yuanlang</span><small class="ml-1x">Python</small></a></h3>
+        <div>本人毕业于四川文理学院。目前从事网络爬虫，Android逆向方面工作，也热衷于算法与数据分析。</div>
+      </div>
+    </figure>
+  </div>
+</div>
+
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+      
+      <div id="vcomment" class="comment"></div> 
+      <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+      <script src="//unpkg.com/valine/dist/Valine.min.js"></script>
+      <script>
+         var notify = 'false' == true ? true : false;
+         var verify = 'false' == true ? true : false;
+          window.onload = function() {
+              new Valine({
+                  el: '.comment',
+                  notify: notify,
+                  verify: verify,
+                  app_id: "eMPxlnHK3gsE9VV9ehB05y5C-gzGzoHsz",
+                  app_key: "h5S0YSOKqe4rF8HMVfJqruw7",
+                  placeholder: "ヾﾉ≧∀≦)o来啊，快活啊!",
+                  avatar:"mm"
+              });
+          }
+      </script>
+      
+    
+  </section>
+
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    <li class="prev">
+      <a href="/2020/06/09/Android脱壳系列-阿里加固分析/" title="Android脱壳系列-阿里加固分析"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;Newer</span></a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/2020/06/09/Android脱壳系列-百度加固分析/" title="Android脱壳系列-百度加固分析"><span>Older&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+  </ul>
+  
+  
+  <!-- Button trigger modal -->
+  <button type="button" class="btn btn-fancy btn-donate pop-onhover bg-gradient-warning" data-toggle="modal" data-target="#donateModal"><span>$</span></button>
+  <!-- <div class="wave-icon wave-icon-danger btn-donate" data-toggle="modal" data-target="#donateModal">
+    <div class="wave-circle"><span class="icon"><i class="icon icon-bill"></i></span></div>
+  </div> -->
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,qq,wechat,facebook,twitter" data-mobile-sites="weibo,qq,qzone"></div>
+    
+  </div>
+  </div>
+</nav>
+  
+<!-- Modal -->
+<div class="modal modal-center modal-small modal-xs-full fade" id="donateModal" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content donate">
+      <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+      <div class="modal-body">
+        <div class="donate-box">
+          <div class="donate-head">
+            <p>Maybe you could buy me a cup of coffee.</p>
+          </div>
+          <div class="tab-content">
+            <div role="tabpanel" class="tab-pane fade active in" id="alipay">
+              <div class="donate-payimg">
+                <img src="/images/donate/alipayimg.png" alt="Scan Qrcode" title="Scan" />
+              </div>
+              <p class="text-muted mv">Scan this qrcode</p>
+              <p class="text-grey">Open alipay app scan this qrcode, buy me a coffee!</p>
+            </div>
+            <div role="tabpanel" class="tab-pane fade" id="wechatpay">
+              <div class="donate-payimg">
+                <img src="/images/donate/wechatpayimg.png" alt="Scan Qrcode" title="Scan" />
+              </div>
+              <p class="text-muted mv">Scan this qrcode</p>
+              <p class="text-grey">Open wechat app scan this qrcode, buy me a coffee!</p>
+            </div>
+          </div>
+          <div class="donate-footer">
+            <ul class="nav nav-tabs nav-justified" role="tablist">
+              <li role="presentation" class="active">
+                <a href="#alipay" id="alipay-tab" role="tab" data-toggle="tab" aria-controls="alipay" aria-expanded="true"><i class="icon icon-alipay"></i> alipay</a>
+              </li>
+              <li role="presentation" class="">
+                <a href="#wechatpay" role="tab" id="wechatpay-tab" data-toggle="tab" aria-controls="wechatpay" aria-expanded="false"><i class="icon icon-wepay"></i> wechat payment</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/langgithub" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
+
+    <div class="copyright">
+    	
+        <div class="publishby">
+        	Theme by <a href="https://github.com/cofess" target="_blank"> cofess </a>base on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+        </div>
+    </div>
+</footer>
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+<script>
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+</script>
+<script src="/js/plugin.min.js"></script>
+<script src="/js/application.js"></script>
+
+    <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: 'Posts',
+            PAGES: 'Pages',
+            CATEGORIES: 'Categories',
+            TAGS: 'Tags',
+            UNTITLED: '(Untitled)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+<script src="/js/insight.js"></script>
+
+
+
+
+
+   
+
+
+<!-- custom analytics part create by xiamo -->
+<script defer src="https://cdn1.lncld.net/static/js/av-min-1.2.1.js"></script>
+<script defer>
+AV.init({
+  appId: 'eMPxlnHK3gsE9VV9ehB05y5C-gzGzoHsz',
+  appKey: 'h5S0YSOKqe4rF8HMVfJqruw7'
+});
+
+function showTime(Counter) {
+	var query = new AV.Query(Counter);
+		var visitors= $('.leancloud_visitors');
+		query.greaterThanOrEqualTo("time", 0);		
+		query.find({
+			success: function(results) {
+				if (results.length == 0) {				
+					return;
+				}
+				var data = results;
+				visitors.each(function(){
+					var url = $(this).attr('id').trim();					
+					for (var i = 0; i < data.length; i++) {
+						var object = data[i];
+						var content = object.get('time');
+						var _url = object.get('url')
+						if(url == _url){
+							$(this).text(content);
+						}
+					}
+				})
+				
+			},
+			error: function(object, error) {
+				console.log("Error: " + error.code + " " + error.message);
+			}
+		});
+}
+
+function addCount(Counter) {
+	var Counter = AV.Object.extend("Counter");
+	url = $(".leancloud_visitors").attr('id').trim();
+	title = $(".leancloud_visitors").attr('data-flag-title').trim();
+	var query = new AV.Query(Counter);
+	query.equalTo("url", url);
+	query.find({
+		success: function(results) {
+			if (results.length > 0) {
+				var counter = results[0];
+				counter.fetchWhenSave(true);
+				counter.increment("time");
+				counter.save(null, {
+					success: function(counter) {
+						var content = counter.get('time');
+						$(document.getElementById(url)).text(content);
+					},
+					error: function(counter, error) {
+						console.log('Failed to save Visitor num, with error message: ' + error.message);
+					}
+				});
+			} else {
+				var newcounter = new Counter();
+				newcounter.set("title", title);
+				newcounter.set("url", url);
+				newcounter.set("time", 1);
+				newcounter.save(null, {
+					success: function(newcounter) {
+					    console.log("newcounter.get('time')="+newcounter.get('time'));
+						var content = newcounter.get('time');
+						$(document.getElementById(url)).text(content);
+					},
+					error: function(newcounter, error) {
+						console.log('Failed to create');
+					}
+				});
+			}
+		},
+		error: function(error) {
+			console.log('Error:' + error.code + " " + error.message);
+		}
+	});
+}
+$(function() {
+	var Counter = AV.Object.extend("Counter");
+	if ($('.leancloud_visitors').length == 1) {
+		addCount(Counter);
+	} else {
+		showTime(Counter);
+	}
+}); 
+</script>
+
+
+
+   
+    
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/valine"></script>
+  <script type="text/javascript">
+  var GUEST = ['nick', 'mail', 'link'];
+  var meta = 'nick,mail,link';
+  meta = meta.split(',').filter(function(item) {
+    return GUEST.indexOf(item) > -1;
+  });
+  new Valine({
+    el: '#vcomments',
+    verify: false,
+    notify: false,
+    appId: '',
+    appKey: '',
+    placeholder: 'Just go go',
+    avatar: 'mm',
+    meta: meta,
+    pageSize: '10' || 10,
+    visitor: false
+  });
+  </script>
+
+     
+
+
+
+
+
+
+
+</body>
+</html>

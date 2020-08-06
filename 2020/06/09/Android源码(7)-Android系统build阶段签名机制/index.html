@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform">
+  <meta http-equiv="Cache-Control" content="no-siteapp">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000">
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top">
+  
+  
+  <title>Android源码(7)-Android系统build阶段签名机制 | Hexo</title>
+  <meta name="description" content="本文介绍Android系统build阶段的签名机制。 一、系统build阶段签名机制 系统中有4组key用于build阶段对apk进行签名：   Media Platform Shared Testkey  default key是放在Android源码的/build/target/product/security目录下:  media.pk8与media.x509.pem； platform.p">
+<meta name="keywords" content="Android源码">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Android源码(7)-Android系统build阶段签名机制">
+<meta property="og:url" content="https://langgithub.github.io/2020/06/09/Android源码(7)-Android系统build阶段签名机制/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="本文介绍Android系统build阶段的签名机制。 一、系统build阶段签名机制 系统中有4组key用于build阶段对apk进行签名：   Media Platform Shared Testkey  default key是放在Android源码的/build/target/product/security目录下:  media.pk8与media.x509.pem； platform.p">
+<meta property="og:locale" content="default">
+<meta property="og:image" content="https://langgithub.github.io/img/cd-dev-tool.png">
+<meta property="og:image" content="https://langgithub.github.io/img/release-key.png">
+<meta property="og:image" content="https://langgithub.github.io/img/WX20190714-095905@2x.png">
+<meta property="og:image" content="https://langgithub.github.io/img/signapk.png">
+<meta property="og:updated_time" content="2020-06-09T09:29:21.365Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Android源码(7)-Android系统build阶段签名机制">
+<meta name="twitter:description" content="本文介绍Android系统build阶段的签名机制。 一、系统build阶段签名机制 系统中有4组key用于build阶段对apk进行签名：   Media Platform Shared Testkey  default key是放在Android源码的/build/target/product/security目录下:  media.pk8与media.x509.pem； platform.p">
+<meta name="twitter:image" content="https://langgithub.github.io/img/cd-dev-tool.png">
+  <!-- Canonical links -->
+  <link rel="canonical" href="https://langgithub.github.io/2020/06/09/Android源码(7)-Android系统build阶段签名机制/index.html">
+  
+    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  <link rel="stylesheet" href="/css/style.css">
+  
+  
+  
+  
+</head>
+
+
+<body class="main-center" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="https://github.com/langgithub" target="_blank">
+          <img class="img-circle img-rotate" src="/images/avatar.jpg" width="200" height="200">
+        </a>
+        <h2 id="name" class="hidden-xs hidden-sm">yuanlang</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md">Python</h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Beijing, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
+
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="Search" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="Type something..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+    </div>
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
+</div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav ">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">Home</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">Archives</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">Categories</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">Tags</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-repository">
+          <a href="/repository">
+            
+            <i class="icon icon-project"></i>
+            
+            <span class="menu-title">Repository</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-books">
+          <a href="/books">
+            
+            <i class="icon icon-book-fill"></i>
+            
+            <span class="menu-title">Books</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-links">
+          <a href="/links">
+            
+            <i class="icon icon-friendship"></i>
+            
+            <span class="menu-title">Links</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">About</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/langgithub" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
+
+    </nav>
+  </div>
+</header>
+
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    
+      <div class="widget">
+    <h3 class="widget-title">Board</h3>
+    <div class="widget-body">
+        <div id="board">
+            <div class="content">
+                qq群号：906761431 </br> <img src="/img/WechatIMG156.png"/>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget-body">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">9</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/code-Android/">code-Android</a><span class="category-list-count">14</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/code-c/">code-c++</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/code-go/">code-go</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/code-ios/">code-ios</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/code-java/">code-java</a><span class="category-list-count">8</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/code-javascript/">code-javascript</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/code-python/">code-python</a><span class="category-list-count">18</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/区块链/">区块链</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/数据存储-bigdata/">数据存储-bigdata</a><span class="category-list-count">7</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/数据存储-mongodb/">数据存储-mongodb</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/数据存储-mysql/">数据存储-mysql</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/爬虫-Android逆向/">爬虫-Android逆向</a><span class="category-list-count">24</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/爬虫-js逆向/">爬虫-js逆向</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/爬虫-玄学/">爬虫-玄学</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/算法-NLP/">算法-NLP</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/算法-数据结构/">算法-数据结构</a><span class="category-list-count">7</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/算法-机器学习/">算法-机器学习</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/辅助工具/">辅助工具</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/面试/">面试</a><span class="category-list-count">12</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget-body">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/7z/">7z</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ARM/">ARM</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Activity/">Activity</a><span class="tag-list-count">8</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Ajax/">Ajax</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android/">Android</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android刷机/">Android刷机</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android加固/">Android加固</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android源码/">Android源码</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android签名/">Android签名</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android逆向/">Android逆向</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/IDA/">IDA</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Linux/">Linux</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/NLP/">NLP</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/WSGI/">WSGI</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/YouCompleteMe/">YouCompleteMe</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/c/">c++</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/frida/">frida</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/git/">git</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/go/">go</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/hadoop/">hadoop</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/hexo/">hexo</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/hook/">hook</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/http/">http</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/https/">https</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ios开发/">ios开发</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/java/">java</a><span class="tag-list-count">8</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/javascript/">javascript</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/jvm/">jvm</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/linux/">linux</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/linux操作系统/">linux操作系统</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/maven/">maven</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mongodb/">mongodb</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mysql/">mysql</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ndk/">ndk</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/netty/">netty</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ptrace/">ptrace</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/python/">python</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/python源码阅读/">python源码阅读</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/so/">so</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/sublime-text3/">sublime text3</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/tar/">tar</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/vim/">vim</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/xposed/">xposed</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/zip/">zip</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/区块链/">区块链</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/手机群控/">手机群控</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/操作系统/">操作系统</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/数据库/">数据库</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/数据结构/">数据结构</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/文件结构/">文件结构</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/机器学习/">机器学习</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/案例/">案例</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/滑块验证码/">滑块验证码</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/爬虫/">爬虫</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/简单图形验证码/">简单图形验证码</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/算法/">算法</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/线性代数/">线性代数</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/统计/">统计</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/脱壳/">脱壳</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/自动化/">自动化</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/计算机网络原理/">计算机网络原理</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/锁/">锁</a><span class="tag-list-count">1</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget-body tagcloud">
+      <a href="/tags/7z/" style="font-size: 13px;">7z</a> <a href="/tags/ARM/" style="font-size: 13px;">ARM</a> <a href="/tags/Activity/" style="font-size: 13.6px;">Activity</a> <a href="/tags/Ajax/" style="font-size: 13px;">Ajax</a> <a href="/tags/Android/" style="font-size: 13px;">Android</a> <a href="/tags/Android刷机/" style="font-size: 13.1px;">Android刷机</a> <a href="/tags/Android加固/" style="font-size: 13px;">Android加固</a> <a href="/tags/Android源码/" style="font-size: 13.9px;">Android源码</a> <a href="/tags/Android签名/" style="font-size: 13px;">Android签名</a> <a href="/tags/Android逆向/" style="font-size: 13.1px;">Android逆向</a> <a href="/tags/IDA/" style="font-size: 13px;">IDA</a> <a href="/tags/Linux/" style="font-size: 13.7px;">Linux</a> <a href="/tags/NLP/" style="font-size: 13.3px;">NLP</a> <a href="/tags/WSGI/" style="font-size: 13px;">WSGI</a> <a href="/tags/YouCompleteMe/" style="font-size: 13px;">YouCompleteMe</a> <a href="/tags/c/" style="font-size: 13px;">c++</a> <a href="/tags/frida/" style="font-size: 13px;">frida</a> <a href="/tags/git/" style="font-size: 13px;">git</a> <a href="/tags/go/" style="font-size: 13px;">go</a> <a href="/tags/hadoop/" style="font-size: 13.5px;">hadoop</a> <a href="/tags/hexo/" style="font-size: 13px;">hexo</a> <a href="/tags/hook/" style="font-size: 13px;">hook</a> <a href="/tags/http/" style="font-size: 13.1px;">http</a> <a href="/tags/https/" style="font-size: 13px;">https</a> <a href="/tags/ios开发/" style="font-size: 13px;">ios开发</a> <a href="/tags/java/" style="font-size: 13.6px;">java</a> <a href="/tags/javascript/" style="font-size: 13px;">javascript</a> <a href="/tags/jvm/" style="font-size: 13px;">jvm</a> <a href="/tags/linux/" style="font-size: 13.1px;">linux</a> <a href="/tags/linux操作系统/" style="font-size: 13px;">linux操作系统</a> <a href="/tags/maven/" style="font-size: 13px;">maven</a> <a href="/tags/mongodb/" style="font-size: 13px;">mongodb</a> <a href="/tags/mysql/" style="font-size: 13.3px;">mysql</a> <a href="/tags/ndk/" style="font-size: 13.1px;">ndk</a> <a href="/tags/netty/" style="font-size: 13.1px;">netty</a> <a href="/tags/ptrace/" style="font-size: 13.2px;">ptrace</a> <a href="/tags/python/" style="font-size: 13.8px;">python</a> <a href="/tags/python源码阅读/" style="font-size: 13.5px;">python源码阅读</a> <a href="/tags/so/" style="font-size: 14px;">so</a> <a href="/tags/sublime-text3/" style="font-size: 13px;">sublime text3</a> <a href="/tags/tar/" style="font-size: 13px;">tar</a> <a href="/tags/vim/" style="font-size: 13px;">vim</a> <a href="/tags/xposed/" style="font-size: 13.1px;">xposed</a> <a href="/tags/zip/" style="font-size: 13px;">zip</a> <a href="/tags/区块链/" style="font-size: 13.2px;">区块链</a> <a href="/tags/手机群控/" style="font-size: 13px;">手机群控</a> <a href="/tags/操作系统/" style="font-size: 13px;">操作系统</a> <a href="/tags/数据库/" style="font-size: 13px;">数据库</a> <a href="/tags/数据结构/" style="font-size: 13.5px;">数据结构</a> <a href="/tags/文件结构/" style="font-size: 13px;">文件结构</a> <a href="/tags/机器学习/" style="font-size: 13.2px;">机器学习</a> <a href="/tags/案例/" style="font-size: 13px;">案例</a> <a href="/tags/滑块验证码/" style="font-size: 13px;">滑块验证码</a> <a href="/tags/爬虫/" style="font-size: 13px;">爬虫</a> <a href="/tags/简单图形验证码/" style="font-size: 13.1px;">简单图形验证码</a> <a href="/tags/算法/" style="font-size: 13.4px;">算法</a> <a href="/tags/线性代数/" style="font-size: 13px;">线性代数</a> <a href="/tags/统计/" style="font-size: 13px;">统计</a> <a href="/tags/脱壳/" style="font-size: 13.5px;">脱壳</a> <a href="/tags/自动化/" style="font-size: 13.1px;">自动化</a> <a href="/tags/计算机网络原理/" style="font-size: 13px;">计算机网络原理</a> <a href="/tags/锁/" style="font-size: 13px;">锁</a>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Archive</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/06/">June 2020</a><span class="archive-list-count">135</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/面试/">面试</a>
+              </p>
+              <p class="item-title">
+                <a href="/2020/06/09/链表相关题/" class="title">链表相关题</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2020-06-09T09:29:21.397Z" itemprop="datePublished">2020-06-09</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/算法-数据结构/">算法-数据结构</a>
+              </p>
+              <p class="item-title">
+                <a href="/2020/06/09/递归算法/" class="title">递归算法</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2020-06-09T09:29:21.396Z" itemprop="datePublished">2020-06-09</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/算法-数据结构/">算法-数据结构</a>
+              </p>
+              <p class="item-title">
+                <a href="/2020/06/09/贪心算法/" class="title">贪心算法</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2020-06-09T09:29:21.396Z" itemprop="datePublished">2020-06-09</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/面试/">面试</a>
+              </p>
+              <p class="item-title">
+                <a href="/2020/06/09/计算机网络原理/" class="title">计算机网络原理</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2020-06-09T09:29:21.396Z" itemprop="datePublished">2020-06-09</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/爬虫-Android逆向/">爬虫-Android逆向</a>
+              </p>
+              <p class="item-title">
+                <a href="/2020/06/09/逆向-ARM指令/" class="title">逆向-ARM指令</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2020-06-09T09:29:21.396Z" itemprop="datePublished">2020-06-09</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-Android源码(7)-Android系统build阶段签名机制" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Android源码(7)-Android系统build阶段签名机制
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/2020/06/09/Android源码(7)-Android系统build阶段签名机制/" class="article-date">
+	  <time datetime="2020-06-09T09:29:21.365Z" itemprop="datePublished">2020-06-09</time>
+	</a>
+</span>
+        
+  <span class="article-category">
+    <i class="icon icon-folder"></i>
+    <a class="article-category-link" href="/categories/code-Android/">code-Android</a>
+  </span>
+
+        
+  <span class="article-tag">
+    <i class="icon icon-tags"></i>
+	<a class="article-tag-link" href="/tags/Android源码/">Android源码</a>
+  </span>
+
+
+        
+
+	<span class="article-read hidden-xs">
+    	<i class="icon icon-eye-fill" aria-hidden="true"></i>
+    	<span id="/2020/06/09/Android源码(7)-Android系统build阶段签名机制/" class="leancloud_visitors"  data-flag-title="Android源码(7)-Android系统build阶段签名机制">0</span>
+    </span>
+
+
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/2020/06/09/Android源码(7)-Android系统build阶段签名机制/#comments" class="article-comment-link">Comments</a></span>
+        
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <p>本文介绍Android系统build阶段的签名机制。</p>
+<h1 id="一、系统build阶段签名机制"><a href="#一、系统build阶段签名机制" class="headerlink" title="一、系统build阶段签名机制"></a>一、系统build阶段签名机制</h1><ol>
+<li>系统中有4组key用于build阶段对apk进行签名：</li>
+</ol>
+<ul>
+<li>Media</li>
+<li>Platform</li>
+<li>Shared</li>
+<li>Testkey</li>
+</ul>
+<p>default key是放在Android源码的/build/target/product/security目录下:</p>
+<ul>
+<li>media.pk8与media.x509.pem；</li>
+<li>platform.pk8与platform.x509.pem；</li>
+<li>shared.pk8与shared.x509.pem；</li>
+<li>testkey.pk8与testkey.x509.pem；<br>其中，<em>.pk8文件为私钥，</em>.x509.pem文件为公钥，这需要去了解非对称加密方式。</li>
+</ul>
+<ol start="2">
+<li>在apk的android.mk文件中会指定LOCAL_CERTIFICATE 变量：</li>
+</ol>
+<p>LOCAL_CERTIFICATE可设置的值如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">LOCAL_CERTIFICATE := testkey   # 普通APK，默认情况下使用</span><br><span class="line">LOCAL_CERTIFICATE := platform  # 该APK完成一些系统的核心功能,这种方式编译出来的APK所在进程的UID为system</span><br><span class="line">LOCAL_CERTIFICATE := shared    # 该APK是media/download系统中的一环</span><br><span class="line">LOCAL_CERTIFICATE := media     # 该APK是media/download系统中的一环</span><br><span class="line">如果不指定，默认使用testkey。</span><br></pre></td></tr></table></figure></p>
+<p>对应的，除了在Android.mk指定上述的值，还需要在APK源码的AndroidManifest.xml文件的manifest节点里面申明权限：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">android:sharedUserId=&quot;android.uid.system&quot;</span><br><span class="line">android:sharedUserId=&quot;android.uid.shared&quot;</span><br><span class="line">android:sharedUserId=&quot;android.media&quot;</span><br></pre></td></tr></table></figure></p>
+<ol start="3">
+<li>Build规则是Build/core/prebuilt.mk。</li>
+<li>在build/core/config.mk中，DEFAULT_SYSTEM_DEV_CERTIFICATE可以通过PRODUCT_DEFAULT_DEV_CERTIFICATE去指定各家厂商的key path。</li>
+</ol>
+<p>我们可以看到，默认为build/target/product/security/testkey。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"># The default key if not set as LOCAL_CERTIFICATE</span><br><span class="line">ifdef PRODUCT_DEFAULT_DEV_CERTIFICATE</span><br><span class="line">  DEFAULT_SYSTEM_DEV_CERTIFICATE := $(PRODUCT_DEFAULT_DEV_CERTIFICATE)</span><br><span class="line">else</span><br><span class="line">  DEFAULT_SYSTEM_DEV_CERTIFICATE := build/target/product/security/testkey</span><br><span class="line">endif</span><br></pre></td></tr></table></figure></p>
+<h1 id="二、自定义系统签名的key"><a href="#二、自定义系统签名的key" class="headerlink" title="二、自定义系统签名的key"></a>二、自定义系统签名的key</h1><p>上面介绍了系统有默认四组key，那么如果我们要制作自己的key，需要怎么做呢？<br>在build/target/product/security/目录下有一个README，里面有说明怎么制作这些key并且使用。</p>
+<ol>
+<li>进入Development/tools/ 目录</li>
+</ol>
+<p><img src="/img/cd-dev-tool.png" alt="2"></p>
+<ol start="2">
+<li>使用make_key工具生成签名文件：<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sh make_key releasekey  &apos;/C=CN/ST=Guangdong/L=Shenzhen/O=Mediatek/OU=MTK/CN=fzll/emailAddress=maoao530@foxmail.com&apos;</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<p>其中：</p>
+<p>C : Country Name (2 letter code)<br>ST : State or Province Name (full name)<br>L : Locality Name (eg, city)<br>O : Organization Name (eg, company)<br>OU : Organizational Unit Name (eg, section)<br>CN : Common Name (eg, your name or your server’s hostname)<br>emailAddress : Contact email address</p>
+<ol start="3">
+<li>用ls命令发现目录下多了两个文件：releasekey.x509.pem 和 releasekey.pk8</li>
+</ol>
+<p><img src="/img/release-key.png" alt="1"></p>
+<ol start="4">
+<li><p>同样的步骤生成platform / shared / media</p>
+</li>
+<li><p>用自定义的key替换build/target/product/security/目录下面的key。</p>
+</li>
+</ol>
+<p>三、对APK进行系统签名<br>为了使apk有system权限，通常我们需要对其进行系统签名：</p>
+<p>1、在应用程序的AndroidManifest.xml中的manifest节点中加入<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">android:sharedUserId=&quot;android.uid.system&quot;这个属性。</span><br></pre></td></tr></table></figure></p>
+<p>2、修改它的Android.mk文件，加入<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">LOCAL_CERTIFICATE := platform</span><br><span class="line">重新编译，生成的apk就有修改system权限了,我们通过ps命令查看APK所在进程的UID，发现值为system。</span><br></pre></td></tr></table></figure></p>
+<p>三. Android签名机制之—签名过程详解</p>
+<ol>
+<li>两种签名方式<ul>
+<li>jarsigner</li>
+<li>signapk</li>
+</ul>
+</li>
+<li>签名流程机制<br>源码位置：com/android/signapk/sign.java<br><br>通过上面的签名时我们可以看到，Android签名apk之后，会有一个META-INF文件夹，这里有三个文件：<br>MANIFEST.MF<br>CERT.RSA<br>CERT.SF<br>下面来看看这三个文件到底是干啥的？</li>
+</ol>
+<ul>
+<li>MANIFEST.MF<br><img src="/img/WX20190714-095905@2x.png" alt="1"><br>开下源码：<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br></pre></td><td class="code"><pre><span class="line">【main】</span><br><span class="line">public static void main(String[] args) &#123;</span><br><span class="line">      if (args.length &lt; 4) usage();</span><br><span class="line"></span><br><span class="line">      sBouncyCastleProvider = new BouncyCastleProvider();</span><br><span class="line">      Security.addProvider(sBouncyCastleProvider);</span><br><span class="line"></span><br><span class="line">      boolean signWholeFile = false;</span><br><span class="line">      int argstart = 0;</span><br><span class="line">      if (args[0].equals(&quot;-w&quot;)) &#123;</span><br><span class="line">          signWholeFile = true;</span><br><span class="line">          argstart = 1;</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      if ((args.length - argstart) % 2 == 1) usage();</span><br><span class="line">      int numKeys = ((args.length - argstart) / 2) - 1;</span><br><span class="line">      if (signWholeFile &amp;&amp; numKeys &gt; 1) &#123;</span><br><span class="line">          System.err.println(&quot;Only one key may be used with -w.&quot;);</span><br><span class="line">          System.exit(2);</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      String inputFilename = args[args.length-2];</span><br><span class="line">      String outputFilename = args[args.length-1];</span><br><span class="line"></span><br><span class="line">      JarFile inputJar = null;</span><br><span class="line">      FileOutputStream outputFile = null;</span><br><span class="line">      int hashes = 0;</span><br><span class="line"></span><br><span class="line">      try &#123;</span><br><span class="line">          File firstPublicKeyFile = new File(args[argstart+0]);</span><br><span class="line"></span><br><span class="line">          X509Certificate[] publicKey = new X509Certificate[numKeys];</span><br><span class="line">          try &#123;</span><br><span class="line">              for (int i = 0; i &lt; numKeys; ++i) &#123;</span><br><span class="line">                  int argNum = argstart + i*2;</span><br><span class="line">                  publicKey[i] = readPublicKey(new File(args[argNum]));</span><br><span class="line">                  hashes |= getAlgorithm(publicKey[i]);</span><br><span class="line">              &#125;</span><br><span class="line">          &#125; catch (IllegalArgumentException e) &#123;</span><br><span class="line">              System.err.println(e);</span><br><span class="line">              System.exit(1);</span><br><span class="line">          &#125;</span><br><span class="line"></span><br><span class="line">          // Set the ZIP file timestamp to the starting valid time</span><br><span class="line">          // of the 0th certificate plus one hour (to match what</span><br><span class="line">          // we&apos;ve historically done).</span><br><span class="line">          long timestamp = publicKey[0].getNotBefore().getTime() + 3600L * 1000;</span><br><span class="line"></span><br><span class="line">          PrivateKey[] privateKey = new PrivateKey[numKeys];</span><br><span class="line">          for (int i = 0; i &lt; numKeys; ++i) &#123;</span><br><span class="line">              int argNum = argstart + i*2 + 1;</span><br><span class="line">              privateKey[i] = readPrivateKey(new File(args[argNum]));</span><br><span class="line">          &#125;</span><br><span class="line">          inputJar = new JarFile(new File(inputFilename), false);  // Don&apos;t verify.</span><br><span class="line"></span><br><span class="line">          outputFile = new FileOutputStream(outputFilename);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">          if (signWholeFile) &#123;</span><br><span class="line">              SignApk.signWholeFile(inputJar, firstPublicKeyFile,</span><br><span class="line">                                    publicKey[0], privateKey[0], outputFile);</span><br><span class="line">          &#125; else &#123;</span><br><span class="line">              JarOutputStream outputJar = new JarOutputStream(outputFile);</span><br><span class="line"></span><br><span class="line">              // For signing .apks, use the maximum compression to make</span><br><span class="line">              // them as small as possible (since they live forever on</span><br><span class="line">              // the system partition).  For OTA packages, use the</span><br><span class="line">              // default compression level, which is much much faster</span><br><span class="line">              // and produces output that is only a tiny bit larger</span><br><span class="line">              // (~0.1% on full OTA packages I tested).</span><br><span class="line">              outputJar.setLevel(9);</span><br><span class="line"></span><br><span class="line">              Manifest manifest = addDigestsToManifest(inputJar, hashes);</span><br><span class="line">              copyFiles(manifest, inputJar, outputJar, timestamp);</span><br><span class="line">              signFile(manifest, inputJar, publicKey, privateKey, outputJar);</span><br><span class="line">              outputJar.close();</span><br><span class="line">          &#125;</span><br><span class="line">      &#125; catch (Exception e) &#123;</span><br><span class="line">          e.printStackTrace();</span><br><span class="line">          System.exit(1);</span><br><span class="line">      &#125; finally &#123;</span><br><span class="line">          try &#123;</span><br><span class="line">              if (inputJar != null) inputJar.close();</span><br><span class="line">              if (outputFile != null) outputFile.close();</span><br><span class="line">          &#125; catch (IOException e) &#123;</span><br><span class="line">              e.printStackTrace();</span><br><span class="line">              System.exit(1);</span><br><span class="line">          &#125;</span><br><span class="line">      &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">【signWholeFile中调用 signFile】</span><br><span class="line">private static void signFile(Manifest manifest, JarFile inputJar,</span><br><span class="line">                            X509Certificate[] publicKey, PrivateKey[] privateKey,</span><br><span class="line">                            JarOutputStream outputJar)</span><br><span class="line">   throws Exception &#123;</span><br><span class="line">   // Assume the certificate is valid for at least an hour.</span><br><span class="line">   long timestamp = publicKey[0].getNotBefore().getTime() + 3600L * 1000;</span><br><span class="line"></span><br><span class="line">   // MANIFEST.MF</span><br><span class="line">   JarEntry je = new JarEntry(JarFile.MANIFEST_NAME);</span><br><span class="line">   je.setTime(timestamp);</span><br><span class="line">   outputJar.putNextEntry(je);</span><br><span class="line">   manifest.write(outputJar);</span><br><span class="line"></span><br><span class="line">   int numKeys = publicKey.length;</span><br><span class="line">   for (int k = 0; k &lt; numKeys; ++k) &#123;</span><br><span class="line">       // CERT.SF / CERT#.SF</span><br><span class="line">       je = new JarEntry(numKeys == 1 ? CERT_SF_NAME :</span><br><span class="line">                         (String.format(CERT_SF_MULTI_NAME, k)));</span><br><span class="line">       je.setTime(timestamp);</span><br><span class="line">       outputJar.putNextEntry(je);</span><br><span class="line">       ByteArrayOutputStream baos = new ByteArrayOutputStream();</span><br><span class="line">       writeSignatureFile(manifest, baos, getAlgorithm(publicKey[k]));</span><br><span class="line">       byte[] signedData = baos.toByteArray();</span><br><span class="line">       outputJar.write(signedData);</span><br><span class="line"></span><br><span class="line">       // CERT.RSA / CERT#.RSA</span><br><span class="line">       je = new JarEntry(numKeys == 1 ? CERT_RSA_NAME :</span><br><span class="line">                         (String.format(CERT_RSA_MULTI_NAME, k)));</span><br><span class="line">       je.setTime(timestamp);</span><br><span class="line">       outputJar.putNextEntry(je);</span><br><span class="line">       writeSignatureBlock(new CMSProcessableByteArray(signedData),</span><br><span class="line">                           publicKey[k], privateKey[k], outputJar);</span><br><span class="line">   &#125;</span><br><span class="line">&#125;   </span><br><span class="line"></span><br><span class="line">【main函数中 addDigestsToManifest】</span><br><span class="line">/**</span><br><span class="line"> * Add the hash(es) of every file to the manifest, creating it if</span><br><span class="line"> * necessary.</span><br><span class="line"> */</span><br><span class="line">private static Manifest addDigestsToManifest(JarFile jar, int hashes)</span><br><span class="line">    throws IOException, GeneralSecurityException &#123;</span><br><span class="line">    Manifest input = jar.getManifest();</span><br><span class="line">    Manifest output = new Manifest();</span><br><span class="line">    Attributes main = output.getMainAttributes();</span><br><span class="line">    if (input != null) &#123;</span><br><span class="line">        main.putAll(input.getMainAttributes());</span><br><span class="line">    &#125; else &#123;</span><br><span class="line">        main.putValue(&quot;Manifest-Version&quot;, &quot;1.0&quot;);</span><br><span class="line">        main.putValue(&quot;Created-By&quot;, &quot;1.0 (Android SignApk)&quot;);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    MessageDigest md_sha1 = null;</span><br><span class="line">    MessageDigest md_sha256 = null;</span><br><span class="line">    if ((hashes &amp; USE_SHA1) != 0) &#123;</span><br><span class="line">        md_sha1 = MessageDigest.getInstance(&quot;SHA1&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">    if ((hashes &amp; USE_SHA256) != 0) &#123;</span><br><span class="line">        md_sha256 = MessageDigest.getInstance(&quot;SHA256&quot;);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    byte[] buffer = new byte[4096];</span><br><span class="line">    int num;</span><br><span class="line"></span><br><span class="line">    // We sort the input entries by name, and add them to the</span><br><span class="line">    // output manifest in sorted order.  We expect that the output</span><br><span class="line">    // map will be deterministic.</span><br><span class="line"></span><br><span class="line">    TreeMap&lt;String, JarEntry&gt; byName = new TreeMap&lt;String, JarEntry&gt;();</span><br><span class="line"></span><br><span class="line">    for (Enumeration&lt;JarEntry&gt; e = jar.entries(); e.hasMoreElements(); ) &#123;</span><br><span class="line">        JarEntry entry = e.nextElement();</span><br><span class="line">        byName.put(entry.getName(), entry);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    for (JarEntry entry: byName.values()) &#123;</span><br><span class="line">        String name = entry.getName();</span><br><span class="line">        if (!entry.isDirectory() &amp;&amp;</span><br><span class="line">            (stripPattern == null || !stripPattern.matcher(name).matches())) &#123;</span><br><span class="line">            InputStream data = jar.getInputStream(entry);</span><br><span class="line">            while ((num = data.read(buffer)) &gt; 0) &#123;</span><br><span class="line">                if (md_sha1 != null) md_sha1.update(buffer, 0, num);</span><br><span class="line">                if (md_sha256 != null) md_sha256.update(buffer, 0, num);</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            Attributes attr = null;</span><br><span class="line">            if (input != null) attr = input.getAttributes(name);</span><br><span class="line">            attr = attr != null ? new Attributes(attr) : new Attributes();</span><br><span class="line">            if (md_sha1 != null) &#123;</span><br><span class="line">                attr.putValue(&quot;SHA1-Digest&quot;,</span><br><span class="line">                              new String(Base64.encode(md_sha1.digest()), &quot;ASCII&quot;));</span><br><span class="line">            &#125;</span><br><span class="line">            if (md_sha256 != null) &#123;</span><br><span class="line">                attr.putValue(&quot;SHA-256-Digest&quot;,</span><br><span class="line">                              new String(Base64.encode(md_sha256.digest()), &quot;ASCII&quot;));</span><br><span class="line">            &#125;</span><br><span class="line">            output.getEntries().put(name, attr);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    return output;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>总结：生成三个文件 MANIFEST.MF，CERT.SF，CERT.RSA</p>
+<ol>
+<li><p>// MANIFEST.MF<br>JarEntry je = new JarEntry(JarFile.MANIFEST_NAME);<br>je.setTime(timestamp);<br>outputJar.putNextEntry(je);<br>manifest.write(outputJar);<br><br>除了三个文件(MANIFEST.MF,CERT.RSA,CERT.SF)，其他的文件都会对文件内容做一次SHA1算法，就是计算出文件的摘要信息,然后用Base64进行编码即可，保存到MANIFEST.MF</p>
+</li>
+<li><p>// CERT.SF / CERT#.SF<br>je = new JarEntry(numKeys == 1 ? CERT_SF_NAME :</p>
+<pre><code>(String.format(CERT_SF_MULTI_NAME, k)));
+</code></pre><p>je.setTime(timestamp);<br>outputJar.putNextEntry(je);<br>ByteArrayOutputStream baos = new ByteArrayOutputStream();<br>writeSignatureFile(manifest, baos, getAlgorithm(publicKey[k]));<br>byte[] signedData = baos.toByteArray();<br>outputJar.write(signedData);<br><br>1》计算这个MANIFEST.MF文件的整体SHA1值，再经过BASE64编码后，记录在CERT.SF主属性块（在文件头上）的“SHA1-Digest-Manifest”属性值值下<br><br>2》逐条计算MANIFEST.MF文件中每一个块的SHA1，并经过BASE64编码后，记录在CERT.SF中的同名块中，属性的名字是“SHA1-Digest“</p>
+</li>
+</ol>
+<ol start="3">
+<li>// CERT.RSA / CERT#.RSA<br>je = new JarEntry(numKeys == 1 ? CERT_RSA_NAME :<br>(String.format(CERT_RSA_MULTI_NAME, k)));<br>je.setTime(timestamp);<br>outputJar.putNextEntry(je);<br>writeSignatureBlock(new CMSProcessableByteArray(signedData),<br>publicKey[k], privateKey[k], outputJar);<br><br>我们看到，这里会把之前生成的 CERT.SF文件， 用私钥计算出签名, 然后将签名以及包含公钥信息的数字证书一同写入 CERT.RSA 中保存。CERT.RSA是一个满足PKCS7格式的文件。</li>
+</ol>
+<h1 id="四-画个图表示"><a href="#四-画个图表示" class="headerlink" title="四. 画个图表示"></a>四. 画个图表示</h1><p><img src="/img/signapk.png" alt="signapk"></p>
+
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="https://langgithub.github.io/2020/06/09/Android源码(7)-Android系统build阶段签名机制/" title="Android源码(7)-Android系统build阶段签名机制" target="_blank" rel="external">https://langgithub.github.io/2020/06/09/Android源码(7)-Android系统build阶段签名机制/</a>
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN协议</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+
+<div class="panel panel-default panel-badger">
+  <div class="panel-body">
+    <figure class="media">
+      <div class="media-left">
+        <a href="https://github.com/langgithub" target="_blank" class="img-burn thumb-sm visible-lg">
+          <img src="/images/avatar.jpg" class="img-rounded w-full" alt="">
+        </a>
+      </div>
+      <div class="media-body">
+        <h3 class="media-heading"><a href="https://github.com/langgithub" target="_blank"><span class="text-dark">yuanlang</span><small class="ml-1x">Python</small></a></h3>
+        <div>本人毕业于四川文理学院。目前从事网络爬虫，Android逆向方面工作，也热衷于算法与数据分析。</div>
+      </div>
+    </figure>
+  </div>
+</div>
+
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+      
+      <div id="vcomment" class="comment"></div> 
+      <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+      <script src="//unpkg.com/valine/dist/Valine.min.js"></script>
+      <script>
+         var notify = 'false' == true ? true : false;
+         var verify = 'false' == true ? true : false;
+          window.onload = function() {
+              new Valine({
+                  el: '.comment',
+                  notify: notify,
+                  verify: verify,
+                  app_id: "eMPxlnHK3gsE9VV9ehB05y5C-gzGzoHsz",
+                  app_key: "h5S0YSOKqe4rF8HMVfJqruw7",
+                  placeholder: "ヾﾉ≧∀≦)o来啊，快活啊!",
+                  avatar:"mm"
+              });
+          }
+      </script>
+      
+    
+  </section>
+
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    <li class="prev">
+      <a href="/2020/06/09/Android源码(8)-Binder理解篇/" title="Android源码(8)-Binder理解篇"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;Newer</span></a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/2020/06/09/Android源码(6)-Android消息机制/" title="Android源码(6)-Android消息机制"><span>Older&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+  </ul>
+  
+  
+  <!-- Button trigger modal -->
+  <button type="button" class="btn btn-fancy btn-donate pop-onhover bg-gradient-warning" data-toggle="modal" data-target="#donateModal"><span>$</span></button>
+  <!-- <div class="wave-icon wave-icon-danger btn-donate" data-toggle="modal" data-target="#donateModal">
+    <div class="wave-circle"><span class="icon"><i class="icon icon-bill"></i></span></div>
+  </div> -->
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,qq,wechat,facebook,twitter" data-mobile-sites="weibo,qq,qzone"></div>
+    
+  </div>
+  </div>
+</nav>
+  
+<!-- Modal -->
+<div class="modal modal-center modal-small modal-xs-full fade" id="donateModal" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content donate">
+      <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+      <div class="modal-body">
+        <div class="donate-box">
+          <div class="donate-head">
+            <p>Maybe you could buy me a cup of coffee.</p>
+          </div>
+          <div class="tab-content">
+            <div role="tabpanel" class="tab-pane fade active in" id="alipay">
+              <div class="donate-payimg">
+                <img src="/images/donate/alipayimg.png" alt="Scan Qrcode" title="Scan" />
+              </div>
+              <p class="text-muted mv">Scan this qrcode</p>
+              <p class="text-grey">Open alipay app scan this qrcode, buy me a coffee!</p>
+            </div>
+            <div role="tabpanel" class="tab-pane fade" id="wechatpay">
+              <div class="donate-payimg">
+                <img src="/images/donate/wechatpayimg.png" alt="Scan Qrcode" title="Scan" />
+              </div>
+              <p class="text-muted mv">Scan this qrcode</p>
+              <p class="text-grey">Open wechat app scan this qrcode, buy me a coffee!</p>
+            </div>
+          </div>
+          <div class="donate-footer">
+            <ul class="nav nav-tabs nav-justified" role="tablist">
+              <li role="presentation" class="active">
+                <a href="#alipay" id="alipay-tab" role="tab" data-toggle="tab" aria-controls="alipay" aria-expanded="true"><i class="icon icon-alipay"></i> alipay</a>
+              </li>
+              <li role="presentation" class="">
+                <a href="#wechatpay" role="tab" id="wechatpay-tab" data-toggle="tab" aria-controls="wechatpay" aria-expanded="false"><i class="icon icon-wepay"></i> wechat payment</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/langgithub" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
+
+    <div class="copyright">
+    	
+        <div class="publishby">
+        	Theme by <a href="https://github.com/cofess" target="_blank"> cofess </a>base on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+        </div>
+    </div>
+</footer>
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+<script>
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+</script>
+<script src="/js/plugin.min.js"></script>
+<script src="/js/application.js"></script>
+
+    <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: 'Posts',
+            PAGES: 'Pages',
+            CATEGORIES: 'Categories',
+            TAGS: 'Tags',
+            UNTITLED: '(Untitled)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+<script src="/js/insight.js"></script>
+
+
+
+
+
+   
+
+
+<!-- custom analytics part create by xiamo -->
+<script defer src="https://cdn1.lncld.net/static/js/av-min-1.2.1.js"></script>
+<script defer>
+AV.init({
+  appId: 'eMPxlnHK3gsE9VV9ehB05y5C-gzGzoHsz',
+  appKey: 'h5S0YSOKqe4rF8HMVfJqruw7'
+});
+
+function showTime(Counter) {
+	var query = new AV.Query(Counter);
+		var visitors= $('.leancloud_visitors');
+		query.greaterThanOrEqualTo("time", 0);		
+		query.find({
+			success: function(results) {
+				if (results.length == 0) {				
+					return;
+				}
+				var data = results;
+				visitors.each(function(){
+					var url = $(this).attr('id').trim();					
+					for (var i = 0; i < data.length; i++) {
+						var object = data[i];
+						var content = object.get('time');
+						var _url = object.get('url')
+						if(url == _url){
+							$(this).text(content);
+						}
+					}
+				})
+				
+			},
+			error: function(object, error) {
+				console.log("Error: " + error.code + " " + error.message);
+			}
+		});
+}
+
+function addCount(Counter) {
+	var Counter = AV.Object.extend("Counter");
+	url = $(".leancloud_visitors").attr('id').trim();
+	title = $(".leancloud_visitors").attr('data-flag-title').trim();
+	var query = new AV.Query(Counter);
+	query.equalTo("url", url);
+	query.find({
+		success: function(results) {
+			if (results.length > 0) {
+				var counter = results[0];
+				counter.fetchWhenSave(true);
+				counter.increment("time");
+				counter.save(null, {
+					success: function(counter) {
+						var content = counter.get('time');
+						$(document.getElementById(url)).text(content);
+					},
+					error: function(counter, error) {
+						console.log('Failed to save Visitor num, with error message: ' + error.message);
+					}
+				});
+			} else {
+				var newcounter = new Counter();
+				newcounter.set("title", title);
+				newcounter.set("url", url);
+				newcounter.set("time", 1);
+				newcounter.save(null, {
+					success: function(newcounter) {
+					    console.log("newcounter.get('time')="+newcounter.get('time'));
+						var content = newcounter.get('time');
+						$(document.getElementById(url)).text(content);
+					},
+					error: function(newcounter, error) {
+						console.log('Failed to create');
+					}
+				});
+			}
+		},
+		error: function(error) {
+			console.log('Error:' + error.code + " " + error.message);
+		}
+	});
+}
+$(function() {
+	var Counter = AV.Object.extend("Counter");
+	if ($('.leancloud_visitors').length == 1) {
+		addCount(Counter);
+	} else {
+		showTime(Counter);
+	}
+}); 
+</script>
+
+
+
+   
+    
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/valine"></script>
+  <script type="text/javascript">
+  var GUEST = ['nick', 'mail', 'link'];
+  var meta = 'nick,mail,link';
+  meta = meta.split(',').filter(function(item) {
+    return GUEST.indexOf(item) > -1;
+  });
+  new Valine({
+    el: '#vcomments',
+    verify: false,
+    notify: false,
+    appId: '',
+    appKey: '',
+    placeholder: 'Just go go',
+    avatar: 'mm',
+    meta: meta,
+    pageSize: '10' || 10,
+    visitor: false
+  });
+  </script>
+
+     
+
+
+
+
+
+
+
+</body>
+</html>

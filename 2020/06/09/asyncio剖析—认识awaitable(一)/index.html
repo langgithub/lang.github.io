@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform">
+  <meta http-equiv="Cache-Control" content="no-siteapp">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000">
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top">
+  
+  
+  <title>asyncio剖析—认识awaitable(一) | Hexo</title>
+  <meta name="description" content="Asyncio 我的理解  __await__ 协议是啥？ 为啥Awaitable，Coroutine，Future，Task都有 __await__ asyncio 调用栈都有哪些,具体包含那几部  Awaitable源码12345678910111213class Awaitable(metaclass=ABCMeta):    __slots__ = ()    @abstractmetho">
+<meta name="keywords" content="python">
+<meta property="og:type" content="article">
+<meta property="og:title" content="asyncio剖析—认识awaitable(一)">
+<meta property="og:url" content="https://langgithub.github.io/2020/06/09/asyncio剖析—认识awaitable(一)/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="Asyncio 我的理解  __await__ 协议是啥？ 为啥Awaitable，Coroutine，Future，Task都有 __await__ asyncio 调用栈都有哪些,具体包含那几部  Awaitable源码12345678910111213class Awaitable(metaclass=ABCMeta):    __slots__ = ()    @abstractmetho">
+<meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2020-06-09T09:29:21.375Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="asyncio剖析—认识awaitable(一)">
+<meta name="twitter:description" content="Asyncio 我的理解  __await__ 协议是啥？ 为啥Awaitable，Coroutine，Future，Task都有 __await__ asyncio 调用栈都有哪些,具体包含那几部  Awaitable源码12345678910111213class Awaitable(metaclass=ABCMeta):    __slots__ = ()    @abstractmetho">
+  <!-- Canonical links -->
+  <link rel="canonical" href="https://langgithub.github.io/2020/06/09/asyncio剖析—认识awaitable(一)/index.html">
+  
+    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  <link rel="stylesheet" href="/css/style.css">
+  
+  
+  
+  
+</head>
+
+
+<body class="main-center" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="https://github.com/langgithub" target="_blank">
+          <img class="img-circle img-rotate" src="/images/avatar.jpg" width="200" height="200">
+        </a>
+        <h2 id="name" class="hidden-xs hidden-sm">yuanlang</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md">Python</h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Beijing, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
+
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="Search" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="Type something..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+    </div>
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
+</div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav ">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">Home</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">Archives</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">Categories</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">Tags</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-repository">
+          <a href="/repository">
+            
+            <i class="icon icon-project"></i>
+            
+            <span class="menu-title">Repository</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-books">
+          <a href="/books">
+            
+            <i class="icon icon-book-fill"></i>
+            
+            <span class="menu-title">Books</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-links">
+          <a href="/links">
+            
+            <i class="icon icon-friendship"></i>
+            
+            <span class="menu-title">Links</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">About</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/langgithub" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
+
+    </nav>
+  </div>
+</header>
+
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    
+      <div class="widget">
+    <h3 class="widget-title">Board</h3>
+    <div class="widget-body">
+        <div id="board">
+            <div class="content">
+                qq群号：906761431 </br> <img src="/img/WechatIMG156.png"/>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget-body">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">9</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/code-Android/">code-Android</a><span class="category-list-count">14</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/code-c/">code-c++</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/code-go/">code-go</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/code-ios/">code-ios</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/code-java/">code-java</a><span class="category-list-count">8</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/code-javascript/">code-javascript</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/code-python/">code-python</a><span class="category-list-count">18</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/区块链/">区块链</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/数据存储-bigdata/">数据存储-bigdata</a><span class="category-list-count">7</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/数据存储-mongodb/">数据存储-mongodb</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/数据存储-mysql/">数据存储-mysql</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/爬虫-Android逆向/">爬虫-Android逆向</a><span class="category-list-count">24</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/爬虫-js逆向/">爬虫-js逆向</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/爬虫-玄学/">爬虫-玄学</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/算法-NLP/">算法-NLP</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/算法-数据结构/">算法-数据结构</a><span class="category-list-count">7</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/算法-机器学习/">算法-机器学习</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/辅助工具/">辅助工具</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/面试/">面试</a><span class="category-list-count">12</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget-body">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/7z/">7z</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ARM/">ARM</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Activity/">Activity</a><span class="tag-list-count">8</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Ajax/">Ajax</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android/">Android</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android刷机/">Android刷机</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android加固/">Android加固</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android源码/">Android源码</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android签名/">Android签名</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android逆向/">Android逆向</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/IDA/">IDA</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Linux/">Linux</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/NLP/">NLP</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/WSGI/">WSGI</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/YouCompleteMe/">YouCompleteMe</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/c/">c++</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/frida/">frida</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/git/">git</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/go/">go</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/hadoop/">hadoop</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/hexo/">hexo</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/hook/">hook</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/http/">http</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/https/">https</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ios开发/">ios开发</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/java/">java</a><span class="tag-list-count">8</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/javascript/">javascript</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/jvm/">jvm</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/linux/">linux</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/linux操作系统/">linux操作系统</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/maven/">maven</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mongodb/">mongodb</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mysql/">mysql</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ndk/">ndk</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/netty/">netty</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ptrace/">ptrace</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/python/">python</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/python源码阅读/">python源码阅读</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/so/">so</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/sublime-text3/">sublime text3</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/tar/">tar</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/vim/">vim</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/xposed/">xposed</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/zip/">zip</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/区块链/">区块链</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/手机群控/">手机群控</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/操作系统/">操作系统</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/数据库/">数据库</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/数据结构/">数据结构</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/文件结构/">文件结构</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/机器学习/">机器学习</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/案例/">案例</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/滑块验证码/">滑块验证码</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/爬虫/">爬虫</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/简单图形验证码/">简单图形验证码</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/算法/">算法</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/线性代数/">线性代数</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/统计/">统计</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/脱壳/">脱壳</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/自动化/">自动化</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/计算机网络原理/">计算机网络原理</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/锁/">锁</a><span class="tag-list-count">1</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget-body tagcloud">
+      <a href="/tags/7z/" style="font-size: 13px;">7z</a> <a href="/tags/ARM/" style="font-size: 13px;">ARM</a> <a href="/tags/Activity/" style="font-size: 13.6px;">Activity</a> <a href="/tags/Ajax/" style="font-size: 13px;">Ajax</a> <a href="/tags/Android/" style="font-size: 13px;">Android</a> <a href="/tags/Android刷机/" style="font-size: 13.1px;">Android刷机</a> <a href="/tags/Android加固/" style="font-size: 13px;">Android加固</a> <a href="/tags/Android源码/" style="font-size: 13.9px;">Android源码</a> <a href="/tags/Android签名/" style="font-size: 13px;">Android签名</a> <a href="/tags/Android逆向/" style="font-size: 13.1px;">Android逆向</a> <a href="/tags/IDA/" style="font-size: 13px;">IDA</a> <a href="/tags/Linux/" style="font-size: 13.7px;">Linux</a> <a href="/tags/NLP/" style="font-size: 13.3px;">NLP</a> <a href="/tags/WSGI/" style="font-size: 13px;">WSGI</a> <a href="/tags/YouCompleteMe/" style="font-size: 13px;">YouCompleteMe</a> <a href="/tags/c/" style="font-size: 13px;">c++</a> <a href="/tags/frida/" style="font-size: 13px;">frida</a> <a href="/tags/git/" style="font-size: 13px;">git</a> <a href="/tags/go/" style="font-size: 13px;">go</a> <a href="/tags/hadoop/" style="font-size: 13.5px;">hadoop</a> <a href="/tags/hexo/" style="font-size: 13px;">hexo</a> <a href="/tags/hook/" style="font-size: 13px;">hook</a> <a href="/tags/http/" style="font-size: 13.1px;">http</a> <a href="/tags/https/" style="font-size: 13px;">https</a> <a href="/tags/ios开发/" style="font-size: 13px;">ios开发</a> <a href="/tags/java/" style="font-size: 13.6px;">java</a> <a href="/tags/javascript/" style="font-size: 13px;">javascript</a> <a href="/tags/jvm/" style="font-size: 13px;">jvm</a> <a href="/tags/linux/" style="font-size: 13.1px;">linux</a> <a href="/tags/linux操作系统/" style="font-size: 13px;">linux操作系统</a> <a href="/tags/maven/" style="font-size: 13px;">maven</a> <a href="/tags/mongodb/" style="font-size: 13px;">mongodb</a> <a href="/tags/mysql/" style="font-size: 13.3px;">mysql</a> <a href="/tags/ndk/" style="font-size: 13.1px;">ndk</a> <a href="/tags/netty/" style="font-size: 13.1px;">netty</a> <a href="/tags/ptrace/" style="font-size: 13.2px;">ptrace</a> <a href="/tags/python/" style="font-size: 13.8px;">python</a> <a href="/tags/python源码阅读/" style="font-size: 13.5px;">python源码阅读</a> <a href="/tags/so/" style="font-size: 14px;">so</a> <a href="/tags/sublime-text3/" style="font-size: 13px;">sublime text3</a> <a href="/tags/tar/" style="font-size: 13px;">tar</a> <a href="/tags/vim/" style="font-size: 13px;">vim</a> <a href="/tags/xposed/" style="font-size: 13.1px;">xposed</a> <a href="/tags/zip/" style="font-size: 13px;">zip</a> <a href="/tags/区块链/" style="font-size: 13.2px;">区块链</a> <a href="/tags/手机群控/" style="font-size: 13px;">手机群控</a> <a href="/tags/操作系统/" style="font-size: 13px;">操作系统</a> <a href="/tags/数据库/" style="font-size: 13px;">数据库</a> <a href="/tags/数据结构/" style="font-size: 13.5px;">数据结构</a> <a href="/tags/文件结构/" style="font-size: 13px;">文件结构</a> <a href="/tags/机器学习/" style="font-size: 13.2px;">机器学习</a> <a href="/tags/案例/" style="font-size: 13px;">案例</a> <a href="/tags/滑块验证码/" style="font-size: 13px;">滑块验证码</a> <a href="/tags/爬虫/" style="font-size: 13px;">爬虫</a> <a href="/tags/简单图形验证码/" style="font-size: 13.1px;">简单图形验证码</a> <a href="/tags/算法/" style="font-size: 13.4px;">算法</a> <a href="/tags/线性代数/" style="font-size: 13px;">线性代数</a> <a href="/tags/统计/" style="font-size: 13px;">统计</a> <a href="/tags/脱壳/" style="font-size: 13.5px;">脱壳</a> <a href="/tags/自动化/" style="font-size: 13.1px;">自动化</a> <a href="/tags/计算机网络原理/" style="font-size: 13px;">计算机网络原理</a> <a href="/tags/锁/" style="font-size: 13px;">锁</a>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Archive</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/06/">June 2020</a><span class="archive-list-count">135</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/面试/">面试</a>
+              </p>
+              <p class="item-title">
+                <a href="/2020/06/09/链表相关题/" class="title">链表相关题</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2020-06-09T09:29:21.397Z" itemprop="datePublished">2020-06-09</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/算法-数据结构/">算法-数据结构</a>
+              </p>
+              <p class="item-title">
+                <a href="/2020/06/09/递归算法/" class="title">递归算法</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2020-06-09T09:29:21.396Z" itemprop="datePublished">2020-06-09</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/算法-数据结构/">算法-数据结构</a>
+              </p>
+              <p class="item-title">
+                <a href="/2020/06/09/贪心算法/" class="title">贪心算法</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2020-06-09T09:29:21.396Z" itemprop="datePublished">2020-06-09</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/面试/">面试</a>
+              </p>
+              <p class="item-title">
+                <a href="/2020/06/09/计算机网络原理/" class="title">计算机网络原理</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2020-06-09T09:29:21.396Z" itemprop="datePublished">2020-06-09</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/爬虫-Android逆向/">爬虫-Android逆向</a>
+              </p>
+              <p class="item-title">
+                <a href="/2020/06/09/逆向-ARM指令/" class="title">逆向-ARM指令</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2020-06-09T09:29:21.396Z" itemprop="datePublished">2020-06-09</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-asyncio剖析—认识awaitable(一)" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
+  
+    <h1 class="article-title" itemprop="name">
+      asyncio剖析—认识awaitable(一)
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/2020/06/09/asyncio剖析—认识awaitable(一)/" class="article-date">
+	  <time datetime="2020-06-09T09:29:21.375Z" itemprop="datePublished">2020-06-09</time>
+	</a>
+</span>
+        
+  <span class="article-category">
+    <i class="icon icon-folder"></i>
+    <a class="article-category-link" href="/categories/code-python/">code-python</a>
+  </span>
+
+        
+  <span class="article-tag">
+    <i class="icon icon-tags"></i>
+	<a class="article-tag-link" href="/tags/python/">python</a>
+  </span>
+
+
+        
+
+	<span class="article-read hidden-xs">
+    	<i class="icon icon-eye-fill" aria-hidden="true"></i>
+    	<span id="/2020/06/09/asyncio剖析—认识awaitable(一)/" class="leancloud_visitors"  data-flag-title="asyncio剖析—认识awaitable(一)">0</span>
+    </span>
+
+
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/2020/06/09/asyncio剖析—认识awaitable(一)/#comments" class="article-comment-link">Comments</a></span>
+        
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <p>Asyncio 我的理解</p>
+<ol>
+<li>__await__ 协议是啥？ 为啥Awaitable，Coroutine，Future，Task都有 __await__</li>
+<li>asyncio 调用栈都有哪些,具体包含那几部</li>
+</ol>
+<h1 id="Awaitable源码"><a href="#Awaitable源码" class="headerlink" title="Awaitable源码"></a>Awaitable源码</h1><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">class Awaitable(metaclass=ABCMeta):</span><br><span class="line"></span><br><span class="line">    __slots__ = ()</span><br><span class="line"></span><br><span class="line">    @abstractmethod</span><br><span class="line">    def __await__(self):</span><br><span class="line">        yield</span><br><span class="line"></span><br><span class="line">    @classmethod</span><br><span class="line">    def __subclasshook__(cls, C):</span><br><span class="line">        if cls is Awaitable:</span><br><span class="line">            return _check_methods(C, &quot;__await__&quot;)</span><br><span class="line">        return NotImplemented</span><br></pre></td></tr></table></figure>
+<h1 id="Coroutine源码"><a href="#Coroutine源码" class="headerlink" title="Coroutine源码"></a>Coroutine源码</h1><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line">class Coroutine(Awaitable):</span><br><span class="line"></span><br><span class="line">    __slots__ = ()</span><br><span class="line"></span><br><span class="line">    @abstractmethod</span><br><span class="line">    def send(self, value):</span><br><span class="line">        &quot;&quot;&quot;Send a value into the coroutine.</span><br><span class="line">        Return next yielded value or raise StopIteration.</span><br><span class="line">        &quot;&quot;&quot;</span><br><span class="line">        raise StopIteration</span><br><span class="line"></span><br><span class="line">    @abstractmethod</span><br><span class="line">    def throw(self, typ, val=None, tb=None):</span><br><span class="line">        &quot;&quot;&quot;Raise an exception in the coroutine.</span><br><span class="line">        Return next yielded value or raise StopIteration.</span><br><span class="line">        &quot;&quot;&quot;</span><br><span class="line">        if val is None:</span><br><span class="line">            if tb is None:</span><br><span class="line">                raise typ</span><br><span class="line">            val = typ()</span><br><span class="line">        if tb is not None:</span><br><span class="line">            val = val.with_traceback(tb)</span><br><span class="line">        raise val</span><br><span class="line"></span><br><span class="line">    def close(self):</span><br><span class="line">        &quot;&quot;&quot;Raise GeneratorExit inside coroutine.</span><br><span class="line">        &quot;&quot;&quot;</span><br><span class="line">        try:</span><br><span class="line">            self.throw(GeneratorExit)</span><br><span class="line">        except (GeneratorExit, StopIteration):</span><br><span class="line">            pass</span><br><span class="line">        else:</span><br><span class="line">            raise RuntimeError(&quot;coroutine ignored GeneratorExit&quot;)</span><br><span class="line"></span><br><span class="line">    @classmethod</span><br><span class="line">    def __subclasshook__(cls, C):</span><br><span class="line">        if cls is Coroutine:</span><br><span class="line">            return _check_methods(C, &apos;__await__&apos;, &apos;send&apos;, &apos;throw&apos;, &apos;close&apos;)</span><br><span class="line">        return NotImplemented</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">Coroutine.register(coroutine)</span><br></pre></td></tr></table></figure>
+<h1 id="Future源码"><a href="#Future源码" class="headerlink" title="Future源码"></a>Future源码</h1><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br><span class="line">205</span><br><span class="line">206</span><br><span class="line">207</span><br><span class="line">208</span><br><span class="line">209</span><br><span class="line">210</span><br><span class="line">211</span><br><span class="line">212</span><br><span class="line">213</span><br><span class="line">214</span><br><span class="line">215</span><br><span class="line">216</span><br><span class="line">217</span><br><span class="line">218</span><br><span class="line">219</span><br><span class="line">220</span><br><span class="line">221</span><br><span class="line">222</span><br><span class="line">223</span><br></pre></td><td class="code"><pre><span class="line">class Future:</span><br><span class="line">    &quot;&quot;&quot;This class is *almost* compatible with concurrent.futures.Future.</span><br><span class="line"></span><br><span class="line">    Differences:</span><br><span class="line"></span><br><span class="line">    - This class is not thread-safe.</span><br><span class="line"></span><br><span class="line">    - result() and exception() do not take a timeout argument and</span><br><span class="line">      raise an exception when the future isn&apos;t done yet.</span><br><span class="line"></span><br><span class="line">    - Callbacks registered with add_done_callback() are always called</span><br><span class="line">      via the event loop&apos;s call_soon().</span><br><span class="line"></span><br><span class="line">    - This class is not compatible with the wait() and as_completed()</span><br><span class="line">      methods in the concurrent.futures package.</span><br><span class="line"></span><br><span class="line">    (In Python 3.4 or later we may be able to unify the implementations.)</span><br><span class="line">    &quot;&quot;&quot;</span><br><span class="line"></span><br><span class="line">    # Class variables serving as defaults for instance variables.</span><br><span class="line">    _state = _PENDING</span><br><span class="line">    _result = None</span><br><span class="line">    _exception = None</span><br><span class="line">    _loop = None</span><br><span class="line">    _source_traceback = None</span><br><span class="line"></span><br><span class="line">    # This field is used for a dual purpose:</span><br><span class="line">    # - Its presence is a marker to declare that a class implements</span><br><span class="line">    #   the Future protocol (i.e. is intended to be duck-type compatible).</span><br><span class="line">    #   The value must also be not-None, to enable a subclass to declare</span><br><span class="line">    #   that it is not compatible by setting this to None.</span><br><span class="line">    # - It is set by __iter__() below so that Task._step() can tell</span><br><span class="line">    #   the difference between `yield from Future()` (correct) vs.</span><br><span class="line">    #   `yield Future()` (incorrect).</span><br><span class="line">    _asyncio_future_blocking = False</span><br><span class="line"></span><br><span class="line">    _log_traceback = False</span><br><span class="line"></span><br><span class="line">    def __init__(self, *, loop=None):</span><br><span class="line">        &quot;&quot;&quot;Initialize the future.</span><br><span class="line"></span><br><span class="line">        The optional event_loop argument allows explicitly setting the event</span><br><span class="line">        loop object used by the future. If it&apos;s not provided, the future uses</span><br><span class="line">        the default event loop.</span><br><span class="line">        &quot;&quot;&quot;</span><br><span class="line">        if loop is None:</span><br><span class="line">            self._loop = events.get_event_loop()</span><br><span class="line">        else:</span><br><span class="line">            self._loop = loop</span><br><span class="line">        self._callbacks = []</span><br><span class="line">        if self._loop.get_debug():</span><br><span class="line">            self._source_traceback = events.extract_stack(sys._getframe(1))</span><br><span class="line"></span><br><span class="line">    _repr_info = base_futures._future_repr_info</span><br><span class="line"></span><br><span class="line">    def __repr__(self):</span><br><span class="line">        return &apos;&lt;%s %s&gt;&apos; % (self.__class__.__name__, &apos; &apos;.join(self._repr_info()))</span><br><span class="line"></span><br><span class="line">    # On Python 3.3 and older, objects with a destructor part of a reference</span><br><span class="line">    # cycle are never destroyed. It&apos;s not more the case on Python 3.4 thanks</span><br><span class="line">    # to the PEP 442.</span><br><span class="line">    if compat.PY34:</span><br><span class="line">        def __del__(self):</span><br><span class="line">            if not self._log_traceback:</span><br><span class="line">                # set_exception() was not called, or result() or exception()</span><br><span class="line">                # has consumed the exception</span><br><span class="line">                return</span><br><span class="line">            exc = self._exception</span><br><span class="line">            context = &#123;</span><br><span class="line">                &apos;message&apos;: (&apos;%s exception was never retrieved&apos;</span><br><span class="line">                            % self.__class__.__name__),</span><br><span class="line">                &apos;exception&apos;: exc,</span><br><span class="line">                &apos;future&apos;: self,</span><br><span class="line">            &#125;</span><br><span class="line">            if self._source_traceback:</span><br><span class="line">                context[&apos;source_traceback&apos;] = self._source_traceback</span><br><span class="line">            self._loop.call_exception_handler(context)</span><br><span class="line"></span><br><span class="line">    def cancel(self):</span><br><span class="line">        &quot;&quot;&quot;Cancel the future and schedule callbacks.</span><br><span class="line"></span><br><span class="line">        If the future is already done or cancelled, return False.  Otherwise,</span><br><span class="line">        change the future&apos;s state to cancelled, schedule the callbacks and</span><br><span class="line">        return True.</span><br><span class="line">        &quot;&quot;&quot;</span><br><span class="line">        self._log_traceback = False</span><br><span class="line">        if self._state != _PENDING:</span><br><span class="line">            return False</span><br><span class="line">        self._state = _CANCELLED</span><br><span class="line">        self._schedule_callbacks()</span><br><span class="line">        return True</span><br><span class="line"></span><br><span class="line">    def _schedule_callbacks(self):</span><br><span class="line">        &quot;&quot;&quot;Internal: Ask the event loop to call all callbacks.</span><br><span class="line"></span><br><span class="line">        The callbacks are scheduled to be called as soon as possible. Also</span><br><span class="line">        clears the callback list.</span><br><span class="line">        &quot;&quot;&quot;</span><br><span class="line">        callbacks = self._callbacks[:]</span><br><span class="line">        if not callbacks:</span><br><span class="line">            return</span><br><span class="line"></span><br><span class="line">        self._callbacks[:] = []</span><br><span class="line">        for callback in callbacks:</span><br><span class="line">            self._loop.call_soon(callback, self)</span><br><span class="line"></span><br><span class="line">    def cancelled(self):</span><br><span class="line">        &quot;&quot;&quot;Return True if the future was cancelled.&quot;&quot;&quot;</span><br><span class="line">        return self._state == _CANCELLED</span><br><span class="line"></span><br><span class="line">    # Don&apos;t implement running(); see http://bugs.python.org/issue18699</span><br><span class="line"></span><br><span class="line">    def done(self):</span><br><span class="line">        &quot;&quot;&quot;Return True if the future is done.</span><br><span class="line"></span><br><span class="line">        Done means either that a result / exception are available, or that the</span><br><span class="line">        future was cancelled.</span><br><span class="line">        &quot;&quot;&quot;</span><br><span class="line">        return self._state != _PENDING</span><br><span class="line"></span><br><span class="line">    def result(self):</span><br><span class="line">        &quot;&quot;&quot;Return the result this future represents.</span><br><span class="line"></span><br><span class="line">        If the future has been cancelled, raises CancelledError.  If the</span><br><span class="line">        future&apos;s result isn&apos;t yet available, raises InvalidStateError.  If</span><br><span class="line">        the future is done and has an exception set, this exception is raised.</span><br><span class="line">        &quot;&quot;&quot;</span><br><span class="line">        if self._state == _CANCELLED:</span><br><span class="line">            raise CancelledError</span><br><span class="line">        if self._state != _FINISHED:</span><br><span class="line">            raise InvalidStateError(&apos;Result is not ready.&apos;)</span><br><span class="line">        self._log_traceback = False</span><br><span class="line">        if self._exception is not None:</span><br><span class="line">            raise self._exception</span><br><span class="line">        return self._result</span><br><span class="line"></span><br><span class="line">    def exception(self):</span><br><span class="line">        &quot;&quot;&quot;Return the exception that was set on this future.</span><br><span class="line"></span><br><span class="line">        The exception (or None if no exception was set) is returned only if</span><br><span class="line">        the future is done.  If the future has been cancelled, raises</span><br><span class="line">        CancelledError.  If the future isn&apos;t done yet, raises</span><br><span class="line">        InvalidStateError.</span><br><span class="line">        &quot;&quot;&quot;</span><br><span class="line">        if self._state == _CANCELLED:</span><br><span class="line">            raise CancelledError</span><br><span class="line">        if self._state != _FINISHED:</span><br><span class="line">            raise InvalidStateError(&apos;Exception is not set.&apos;)</span><br><span class="line">        self._log_traceback = False</span><br><span class="line">        return self._exception</span><br><span class="line"></span><br><span class="line">    def add_done_callback(self, fn):</span><br><span class="line">        &quot;&quot;&quot;Add a callback to be run when the future becomes done.</span><br><span class="line"></span><br><span class="line">        The callback is called with a single argument - the future object. If</span><br><span class="line">        the future is already done when this is called, the callback is</span><br><span class="line">        scheduled with call_soon.</span><br><span class="line">        &quot;&quot;&quot;</span><br><span class="line">        if self._state != _PENDING:</span><br><span class="line">            self._loop.call_soon(fn, self)</span><br><span class="line">        else:</span><br><span class="line">            self._callbacks.append(fn)</span><br><span class="line"></span><br><span class="line">    # New method not in PEP 3148.</span><br><span class="line"></span><br><span class="line">    def remove_done_callback(self, fn):</span><br><span class="line">        &quot;&quot;&quot;Remove all instances of a callback from the &quot;call when done&quot; list.</span><br><span class="line"></span><br><span class="line">        Returns the number of callbacks removed.</span><br><span class="line">        &quot;&quot;&quot;</span><br><span class="line">        filtered_callbacks = [f for f in self._callbacks if f != fn]</span><br><span class="line">        removed_count = len(self._callbacks) - len(filtered_callbacks)</span><br><span class="line">        if removed_count:</span><br><span class="line">            self._callbacks[:] = filtered_callbacks</span><br><span class="line">        return removed_count</span><br><span class="line"></span><br><span class="line">    # So-called internal methods (note: no set_running_or_notify_cancel()).</span><br><span class="line"></span><br><span class="line">    def set_result(self, result):</span><br><span class="line">        &quot;&quot;&quot;Mark the future done and set its result.</span><br><span class="line"></span><br><span class="line">        If the future is already done when this method is called, raises</span><br><span class="line">        InvalidStateError.</span><br><span class="line">        &quot;&quot;&quot;</span><br><span class="line">        if self._state != _PENDING:</span><br><span class="line">            raise InvalidStateError(&apos;&#123;&#125;: &#123;!r&#125;&apos;.format(self._state, self))</span><br><span class="line">        self._result = result</span><br><span class="line">        self._state = _FINISHED</span><br><span class="line">        self._schedule_callbacks()</span><br><span class="line"></span><br><span class="line">    def set_exception(self, exception):</span><br><span class="line">        &quot;&quot;&quot;Mark the future done and set an exception.</span><br><span class="line"></span><br><span class="line">        If the future is already done when this method is called, raises</span><br><span class="line">        InvalidStateError.</span><br><span class="line">        &quot;&quot;&quot;</span><br><span class="line">        if self._state != _PENDING:</span><br><span class="line">            raise InvalidStateError(&apos;&#123;&#125;: &#123;!r&#125;&apos;.format(self._state, self))</span><br><span class="line">        if isinstance(exception, type):</span><br><span class="line">            exception = exception()</span><br><span class="line">        if type(exception) is StopIteration:</span><br><span class="line">            raise TypeError(&quot;StopIteration interacts badly with generators &quot;</span><br><span class="line">                            &quot;and cannot be raised into a Future&quot;)</span><br><span class="line">        self._exception = exception</span><br><span class="line">        self._state = _FINISHED</span><br><span class="line">        self._schedule_callbacks()</span><br><span class="line">        if compat.PY34:</span><br><span class="line">            self._log_traceback = True</span><br><span class="line">        else:</span><br><span class="line">            self._tb_logger = _TracebackLogger(self, exception)</span><br><span class="line">            # Arrange for the logger to be activated after all callbacks</span><br><span class="line">            # have had a chance to call result() or exception().</span><br><span class="line">            self._loop.call_soon(self._tb_logger.activate)</span><br><span class="line"></span><br><span class="line">    def __iter__(self):</span><br><span class="line">        if not self.done():</span><br><span class="line">            self._asyncio_future_blocking = True</span><br><span class="line">            yield self  # This tells Task to wait for completion.</span><br><span class="line">        assert self.done(), &quot;yield from wasn&apos;t used with future&quot;</span><br><span class="line">        return self.result()  # May raise too.</span><br><span class="line"></span><br><span class="line">    if compat.PY35:</span><br><span class="line">        __await__ = __iter__ # make compatible with &apos;await&apos; expression</span><br></pre></td></tr></table></figure>
+<h1 id="Task源码"><a href="#Task源码" class="headerlink" title="Task源码"></a>Task源码</h1><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br><span class="line">205</span><br><span class="line">206</span><br><span class="line">207</span><br><span class="line">208</span><br><span class="line">209</span><br><span class="line">210</span><br><span class="line">211</span><br><span class="line">212</span><br><span class="line">213</span><br><span class="line">214</span><br><span class="line">215</span><br><span class="line">216</span><br><span class="line">217</span><br><span class="line">218</span><br><span class="line">219</span><br><span class="line">220</span><br><span class="line">221</span><br><span class="line">222</span><br><span class="line">223</span><br><span class="line">224</span><br><span class="line">225</span><br><span class="line">226</span><br><span class="line">227</span><br><span class="line">228</span><br><span class="line">229</span><br><span class="line">230</span><br><span class="line">231</span><br><span class="line">232</span><br><span class="line">233</span><br><span class="line">234</span><br><span class="line">235</span><br><span class="line">236</span><br><span class="line">237</span><br><span class="line">238</span><br><span class="line">239</span><br><span class="line">240</span><br></pre></td><td class="code"><pre><span class="line">class Task(futures.Future):</span><br><span class="line">    &quot;&quot;&quot;A coroutine wrapped in a Future.&quot;&quot;&quot;</span><br><span class="line"></span><br><span class="line">    # An important invariant maintained while a Task not done:</span><br><span class="line">    #</span><br><span class="line">    # - Either _fut_waiter is None, and _step() is scheduled;</span><br><span class="line">    # - or _fut_waiter is some Future, and _step() is *not* scheduled.</span><br><span class="line">    #</span><br><span class="line">    # The only transition from the latter to the former is through</span><br><span class="line">    # _wakeup().  When _fut_waiter is not None, one of its callbacks</span><br><span class="line">    # must be _wakeup().</span><br><span class="line"></span><br><span class="line">    # Weak set containing all tasks alive.</span><br><span class="line">    _all_tasks = weakref.WeakSet()</span><br><span class="line"></span><br><span class="line">    # Dictionary containing tasks that are currently active in</span><br><span class="line">    # all running event loops.  &#123;EventLoop: Task&#125;</span><br><span class="line">    _current_tasks = &#123;&#125;</span><br><span class="line"></span><br><span class="line">    # If False, don&apos;t log a message if the task is destroyed whereas its</span><br><span class="line">    # status is still pending</span><br><span class="line">    _log_destroy_pending = True</span><br><span class="line"></span><br><span class="line">    @classmethod</span><br><span class="line">    def current_task(cls, loop=None):</span><br><span class="line">        &quot;&quot;&quot;Return the currently running task in an event loop or None.</span><br><span class="line"></span><br><span class="line">        By default the current task for the current event loop is returned.</span><br><span class="line"></span><br><span class="line">        None is returned when called not in the context of a Task.</span><br><span class="line">        &quot;&quot;&quot;</span><br><span class="line">        if loop is None:</span><br><span class="line">            loop = events.get_event_loop()</span><br><span class="line">        return cls._current_tasks.get(loop)</span><br><span class="line"></span><br><span class="line">    @classmethod</span><br><span class="line">    def all_tasks(cls, loop=None):</span><br><span class="line">        &quot;&quot;&quot;Return a set of all tasks for an event loop.</span><br><span class="line"></span><br><span class="line">        By default all tasks for the current event loop are returned.</span><br><span class="line">        &quot;&quot;&quot;</span><br><span class="line">        if loop is None:</span><br><span class="line">            loop = events.get_event_loop()</span><br><span class="line">        return &#123;t for t in cls._all_tasks if t._loop is loop&#125;</span><br><span class="line"></span><br><span class="line">    def __init__(self, coro, *, loop=None):</span><br><span class="line">        assert coroutines.iscoroutine(coro), repr(coro)</span><br><span class="line">        super().__init__(loop=loop)</span><br><span class="line">        if self._source_traceback:</span><br><span class="line">            del self._source_traceback[-1]</span><br><span class="line">        self._coro = coro</span><br><span class="line">        self._fut_waiter = None</span><br><span class="line">        self._must_cancel = False</span><br><span class="line">        self._loop.call_soon(self._step)</span><br><span class="line">        self.__class__._all_tasks.add(self)</span><br><span class="line"></span><br><span class="line">    # On Python 3.3 or older, objects with a destructor that are part of a</span><br><span class="line">    # reference cycle are never destroyed. That&apos;s not the case any more on</span><br><span class="line">    # Python 3.4 thanks to the PEP 442.</span><br><span class="line">    if compat.PY34:</span><br><span class="line">        def __del__(self):</span><br><span class="line">            if self._state == futures._PENDING and self._log_destroy_pending:</span><br><span class="line">                context = &#123;</span><br><span class="line">                    &apos;task&apos;: self,</span><br><span class="line">                    &apos;message&apos;: &apos;Task was destroyed but it is pending!&apos;,</span><br><span class="line">                &#125;</span><br><span class="line">                if self._source_traceback:</span><br><span class="line">                    context[&apos;source_traceback&apos;] = self._source_traceback</span><br><span class="line">                self._loop.call_exception_handler(context)</span><br><span class="line">            futures.Future.__del__(self)</span><br><span class="line"></span><br><span class="line">    def _repr_info(self):</span><br><span class="line">        return base_tasks._task_repr_info(self)</span><br><span class="line"></span><br><span class="line">    def get_stack(self, *, limit=None):</span><br><span class="line">        &quot;&quot;&quot;Return the list of stack frames for this task&apos;s coroutine.</span><br><span class="line"></span><br><span class="line">        If the coroutine is not done, this returns the stack where it is</span><br><span class="line">        suspended.  If the coroutine has completed successfully or was</span><br><span class="line">        cancelled, this returns an empty list.  If the coroutine was</span><br><span class="line">        terminated by an exception, this returns the list of traceback</span><br><span class="line">        frames.</span><br><span class="line"></span><br><span class="line">        The frames are always ordered from oldest to newest.</span><br><span class="line"></span><br><span class="line">        The optional limit gives the maximum number of frames to</span><br><span class="line">        return; by default all available frames are returned.  Its</span><br><span class="line">        meaning differs depending on whether a stack or a traceback is</span><br><span class="line">        returned: the newest frames of a stack are returned, but the</span><br><span class="line">        oldest frames of a traceback are returned.  (This matches the</span><br><span class="line">        behavior of the traceback module.)</span><br><span class="line"></span><br><span class="line">        For reasons beyond our control, only one stack frame is</span><br><span class="line">        returned for a suspended coroutine.</span><br><span class="line">        &quot;&quot;&quot;</span><br><span class="line">        return base_tasks._task_get_stack(self, limit)</span><br><span class="line"></span><br><span class="line">    def print_stack(self, *, limit=None, file=None):</span><br><span class="line">        &quot;&quot;&quot;Print the stack or traceback for this task&apos;s coroutine.</span><br><span class="line"></span><br><span class="line">        This produces output similar to that of the traceback module,</span><br><span class="line">        for the frames retrieved by get_stack().  The limit argument</span><br><span class="line">        is passed to get_stack().  The file argument is an I/O stream</span><br><span class="line">        to which the output is written; by default output is written</span><br><span class="line">        to sys.stderr.</span><br><span class="line">        &quot;&quot;&quot;</span><br><span class="line">        return base_tasks._task_print_stack(self, limit, file)</span><br><span class="line"></span><br><span class="line">    def cancel(self):</span><br><span class="line">        &quot;&quot;&quot;Request that this task cancel itself.</span><br><span class="line"></span><br><span class="line">        This arranges for a CancelledError to be thrown into the</span><br><span class="line">        wrapped coroutine on the next cycle through the event loop.</span><br><span class="line">        The coroutine then has a chance to clean up or even deny</span><br><span class="line">        the request using try/except/finally.</span><br><span class="line"></span><br><span class="line">        Unlike Future.cancel, this does not guarantee that the</span><br><span class="line">        task will be cancelled: the exception might be caught and</span><br><span class="line">        acted upon, delaying cancellation of the task or preventing</span><br><span class="line">        cancellation completely.  The task may also return a value or</span><br><span class="line">        raise a different exception.</span><br><span class="line"></span><br><span class="line">        Immediately after this method is called, Task.cancelled() will</span><br><span class="line">        not return True (unless the task was already cancelled).  A</span><br><span class="line">        task will be marked as cancelled when the wrapped coroutine</span><br><span class="line">        terminates with a CancelledError exception (even if cancel()</span><br><span class="line">        was not called).</span><br><span class="line">        &quot;&quot;&quot;</span><br><span class="line">        self._log_traceback = False</span><br><span class="line">        if self.done():</span><br><span class="line">            return False</span><br><span class="line">        if self._fut_waiter is not None:</span><br><span class="line">            if self._fut_waiter.cancel():</span><br><span class="line">                # Leave self._fut_waiter; it may be a Task that</span><br><span class="line">                # catches and ignores the cancellation so we may have</span><br><span class="line">                # to cancel it again later.</span><br><span class="line">                return True</span><br><span class="line">        # It must be the case that self._step is already scheduled.</span><br><span class="line">        self._must_cancel = True</span><br><span class="line">        return True</span><br><span class="line"></span><br><span class="line">    def _step(self, exc=None):</span><br><span class="line">        assert not self.done(), \</span><br><span class="line">            &apos;_step(): already done: &#123;!r&#125;, &#123;!r&#125;&apos;.format(self, exc)</span><br><span class="line">        if self._must_cancel:</span><br><span class="line">            if not isinstance(exc, futures.CancelledError):</span><br><span class="line">                exc = futures.CancelledError()</span><br><span class="line">            self._must_cancel = False</span><br><span class="line">        coro = self._coro</span><br><span class="line">        self._fut_waiter = None</span><br><span class="line"></span><br><span class="line">        self.__class__._current_tasks[self._loop] = self</span><br><span class="line">        # Call either coro.throw(exc) or coro.send(None).</span><br><span class="line">        try:</span><br><span class="line">            if exc is None:</span><br><span class="line">                # We use the `send` method directly, because coroutines</span><br><span class="line">                # don&apos;t have `__iter__` and `__next__` methods.</span><br><span class="line">                result = coro.send(None)</span><br><span class="line">            else:</span><br><span class="line">                result = coro.throw(exc)</span><br><span class="line">        except StopIteration as exc:</span><br><span class="line">            if self._must_cancel:</span><br><span class="line">                # Task is cancelled right before coro stops.</span><br><span class="line">                self._must_cancel = False</span><br><span class="line">                self.set_exception(futures.CancelledError())</span><br><span class="line">            else:</span><br><span class="line">                self.set_result(exc.value)</span><br><span class="line">        except futures.CancelledError:</span><br><span class="line">            super().cancel()  # I.e., Future.cancel(self).</span><br><span class="line">        except Exception as exc:</span><br><span class="line">            self.set_exception(exc)</span><br><span class="line">        except BaseException as exc:</span><br><span class="line">            self.set_exception(exc)</span><br><span class="line">            raise</span><br><span class="line">        else:</span><br><span class="line">            blocking = getattr(result, &apos;_asyncio_future_blocking&apos;, None)</span><br><span class="line">            if blocking is not None:</span><br><span class="line">                # Yielded Future must come from Future.__iter__().</span><br><span class="line">                if result._loop is not self._loop:</span><br><span class="line">                    self._loop.call_soon(</span><br><span class="line">                        self._step,</span><br><span class="line">                        RuntimeError(</span><br><span class="line">                            &apos;Task &#123;!r&#125; got Future &#123;!r&#125; attached to a &apos;</span><br><span class="line">                            &apos;different loop&apos;.format(self, result)))</span><br><span class="line">                elif blocking:</span><br><span class="line">                    if result is self:</span><br><span class="line">                        self._loop.call_soon(</span><br><span class="line">                            self._step,</span><br><span class="line">                            RuntimeError(</span><br><span class="line">                                &apos;Task cannot await on itself: &#123;!r&#125;&apos;.format(</span><br><span class="line">                                    self)))</span><br><span class="line">                    else:</span><br><span class="line">                        result._asyncio_future_blocking = False</span><br><span class="line">                        result.add_done_callback(self._wakeup)</span><br><span class="line">                        self._fut_waiter = result</span><br><span class="line">                        if self._must_cancel:</span><br><span class="line">                            if self._fut_waiter.cancel():</span><br><span class="line">                                self._must_cancel = False</span><br><span class="line">                else:</span><br><span class="line">                    self._loop.call_soon(</span><br><span class="line">                        self._step,</span><br><span class="line">                        RuntimeError(</span><br><span class="line">                            &apos;yield was used instead of yield from &apos;</span><br><span class="line">                            &apos;in task &#123;!r&#125; with &#123;!r&#125;&apos;.format(self, result)))</span><br><span class="line">            elif result is None:</span><br><span class="line">                # Bare yield relinquishes control for one event loop iteration.</span><br><span class="line">                self._loop.call_soon(self._step)</span><br><span class="line">            elif inspect.isgenerator(result):</span><br><span class="line">                # Yielding a generator is just wrong.</span><br><span class="line">                self._loop.call_soon(</span><br><span class="line">                    self._step,</span><br><span class="line">                    RuntimeError(</span><br><span class="line">                        &apos;yield was used instead of yield from for &apos;</span><br><span class="line">                        &apos;generator in task &#123;!r&#125; with &#123;!r&#125;&apos;.format(</span><br><span class="line">                            self, result)))</span><br><span class="line">            else:</span><br><span class="line">                # Yielding something else is an error.</span><br><span class="line">                self._loop.call_soon(</span><br><span class="line">                    self._step,</span><br><span class="line">                    RuntimeError(</span><br><span class="line">                        &apos;Task got bad yield: &#123;!r&#125;&apos;.format(result)))</span><br><span class="line">        finally:</span><br><span class="line">            self.__class__._current_tasks.pop(self._loop)</span><br><span class="line">            self = None  # Needed to break cycles when an exception occurs.</span><br><span class="line"></span><br><span class="line">    def _wakeup(self, future):</span><br><span class="line">        try:</span><br><span class="line">            future.result()</span><br><span class="line">        except Exception as exc:</span><br><span class="line">            # This may also be a cancellation.</span><br><span class="line">            self._step(exc)</span><br><span class="line">        else:</span><br><span class="line">            # Don&apos;t pass the value of `future.result()` explicitly,</span><br><span class="line">            # as `Future.__iter__` and `Future.__await__` don&apos;t need it.</span><br><span class="line">            # If we call `_step(value, None)` instead of `_step()`,</span><br><span class="line">            # Python eval loop would use `.send(value)` method call,</span><br><span class="line">            # instead of `__next__()`, which is slower for futures</span><br><span class="line">            # that return non-generator iterators from their `__iter__`.</span><br><span class="line">            self._step()</span><br><span class="line">        self = None  # Needed to break cycles when an exception occurs.</span><br></pre></td></tr></table></figure>
+<h1 id="问题1-Awaitable-obj"><a href="#问题1-Awaitable-obj" class="headerlink" title="问题1 Awaitable obj"></a>问题1 Awaitable obj</h1><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">Coroutine 继承Awaitable</span><br><span class="line">Future 实现__await__ 协议</span><br><span class="line">        if compat.PY35:</span><br><span class="line">        __await__ = __iter__ # make compatible with &apos;await&apos; expression</span><br><span class="line">Task 继承Future</span><br><span class="line"></span><br><span class="line">我的理解 所有 Awaitable都可以变为coroutine</span><br><span class="line"></span><br><span class="line">tasks.py 中如下：</span><br><span class="line">@coroutine</span><br><span class="line">def _wrap_awaitable(awaitable):</span><br><span class="line">    &quot;&quot;&quot;Helper for asyncio.ensure_future().</span><br><span class="line"></span><br><span class="line">    Wraps awaitable (an object with __await__) into a coroutine</span><br><span class="line">    that will later be wrapped in a Task by ensure_future().</span><br><span class="line">    &quot;&quot;&quot;</span><br><span class="line">    return (yield from awaitable.__await__())</span><br></pre></td></tr></table></figure>
+<h1 id="问题二-asyncio-调用栈"><a href="#问题二-asyncio-调用栈" class="headerlink" title="问题二 asyncio 调用栈"></a>问题二 asyncio 调用栈</h1><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line">asyncio 调用栈</span><br><span class="line"></span><br><span class="line">asyncio.get_event_loop() #根据操作系统生成select轮询 命名loop</span><br><span class="line">                |</span><br><span class="line">                |</span><br><span class="line">                |</span><br><span class="line">                v</span><br><span class="line">asyncio.ensure_future(start_server) </span><br><span class="line">                | 函数作用：</span><br><span class="line">                | 1.future直接返回</span><br><span class="line">                | 2.iscoroutine封装成task</span><br><span class="line">                | 3.__await__对象 调用_wrap_awaitable封装成coroutine</span><br><span class="line">                | </span><br><span class="line">                v</span><br><span class="line">        task = tasks.Task(coro, loop=self) </span><br><span class="line">                |</span><br><span class="line">                |</span><br><span class="line">                | self=loop,callback是coro包装成的TaskStepMethWrapper</span><br><span class="line">                |</span><br><span class="line">                v</span><br><span class="line">        handle = events.Handle(callback, args, self) #将task封装成event 放入loop 循环中</span><br><span class="line">        yeild future 挂起future自身等待轮询</span><br><span class="line">                |</span><br><span class="line">                | 重点（类似代码）：</span><br><span class="line">                |    self.coro.send(future.result) #初始化task，启动协程</span><br><span class="line">                |                  |</span><br><span class="line">                |                  v</span><br><span class="line">                |    yield from connect(sock, (&apos;example.com&apos;, 80)) #委托生成器到connect</span><br><span class="line">                |                  |</span><br><span class="line">                |                  v</span><br><span class="line">                |    selector.register(sock.fileno(), EVENT_WRITE,on_connected) #注册event 到loop</span><br><span class="line">                |    yield from f #委托生成器到future </span><br><span class="line">                |                  |</span><br><span class="line">                |                  v</span><br><span class="line">                |        def __iter__(self):</span><br><span class="line">                |            yield self  #挂起future自己，直到loop轮询过来进入下一步</span><br><span class="line">                |            return self.result</span><br><span class="line">                |</span><br><span class="line">                |</span><br><span class="line">                v</span><br><span class="line">        return task</span><br><span class="line">                |</span><br><span class="line">                |</span><br><span class="line">                |</span><br><span class="line">                |</span><br><span class="line">                v</span><br><span class="line">loop.run_until_complete() 启动loop</span><br></pre></td></tr></table></figure>
+<ul>
+<li>国外大神剖析 <a href="http://aosabook.org/en/500L/a-web-crawler-with-asyncio-coroutines.html" target="_blank" rel="noopener">http://aosabook.org/en/500L/a-web-crawler-with-asyncio-coroutines.html</a></li>
+<li>学习博客 <a href="https://hatboy.github.io/archives/page/2/" target="_blank" rel="noopener">https://hatboy.github.io/archives/page/2/</a></li>
+<li>github async demo：<a href="https://github.com/langgithub/async-aiotutorial" target="_blank" rel="noopener">https://github.com/langgithub/async-aiotutorial</a></li>
+</ul>
+
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="https://langgithub.github.io/2020/06/09/asyncio剖析—认识awaitable(一)/" title="asyncio剖析—认识awaitable(一)" target="_blank" rel="external">https://langgithub.github.io/2020/06/09/asyncio剖析—认识awaitable(一)/</a>
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN协议</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+
+<div class="panel panel-default panel-badger">
+  <div class="panel-body">
+    <figure class="media">
+      <div class="media-left">
+        <a href="https://github.com/langgithub" target="_blank" class="img-burn thumb-sm visible-lg">
+          <img src="/images/avatar.jpg" class="img-rounded w-full" alt="">
+        </a>
+      </div>
+      <div class="media-body">
+        <h3 class="media-heading"><a href="https://github.com/langgithub" target="_blank"><span class="text-dark">yuanlang</span><small class="ml-1x">Python</small></a></h3>
+        <div>本人毕业于四川文理学院。目前从事网络爬虫，Android逆向方面工作，也热衷于算法与数据分析。</div>
+      </div>
+    </figure>
+  </div>
+</div>
+
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+      
+      <div id="vcomment" class="comment"></div> 
+      <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+      <script src="//unpkg.com/valine/dist/Valine.min.js"></script>
+      <script>
+         var notify = 'false' == true ? true : false;
+         var verify = 'false' == true ? true : false;
+          window.onload = function() {
+              new Valine({
+                  el: '.comment',
+                  notify: notify,
+                  verify: verify,
+                  app_id: "eMPxlnHK3gsE9VV9ehB05y5C-gzGzoHsz",
+                  app_key: "h5S0YSOKqe4rF8HMVfJqruw7",
+                  placeholder: "ヾﾉ≧∀≦)o来啊，快活啊!",
+                  avatar:"mm"
+              });
+          }
+      </script>
+      
+    
+  </section>
+
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    <li class="prev">
+      <a href="/2020/06/09/android逆向实战/" title="android逆向实战"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;Newer</span></a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/2020/06/09/Spark/" title="Spark"><span>Older&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+  </ul>
+  
+  
+  <!-- Button trigger modal -->
+  <button type="button" class="btn btn-fancy btn-donate pop-onhover bg-gradient-warning" data-toggle="modal" data-target="#donateModal"><span>$</span></button>
+  <!-- <div class="wave-icon wave-icon-danger btn-donate" data-toggle="modal" data-target="#donateModal">
+    <div class="wave-circle"><span class="icon"><i class="icon icon-bill"></i></span></div>
+  </div> -->
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,qq,wechat,facebook,twitter" data-mobile-sites="weibo,qq,qzone"></div>
+    
+  </div>
+  </div>
+</nav>
+  
+<!-- Modal -->
+<div class="modal modal-center modal-small modal-xs-full fade" id="donateModal" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content donate">
+      <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+      <div class="modal-body">
+        <div class="donate-box">
+          <div class="donate-head">
+            <p>Maybe you could buy me a cup of coffee.</p>
+          </div>
+          <div class="tab-content">
+            <div role="tabpanel" class="tab-pane fade active in" id="alipay">
+              <div class="donate-payimg">
+                <img src="/images/donate/alipayimg.png" alt="Scan Qrcode" title="Scan" />
+              </div>
+              <p class="text-muted mv">Scan this qrcode</p>
+              <p class="text-grey">Open alipay app scan this qrcode, buy me a coffee!</p>
+            </div>
+            <div role="tabpanel" class="tab-pane fade" id="wechatpay">
+              <div class="donate-payimg">
+                <img src="/images/donate/wechatpayimg.png" alt="Scan Qrcode" title="Scan" />
+              </div>
+              <p class="text-muted mv">Scan this qrcode</p>
+              <p class="text-grey">Open wechat app scan this qrcode, buy me a coffee!</p>
+            </div>
+          </div>
+          <div class="donate-footer">
+            <ul class="nav nav-tabs nav-justified" role="tablist">
+              <li role="presentation" class="active">
+                <a href="#alipay" id="alipay-tab" role="tab" data-toggle="tab" aria-controls="alipay" aria-expanded="true"><i class="icon icon-alipay"></i> alipay</a>
+              </li>
+              <li role="presentation" class="">
+                <a href="#wechatpay" role="tab" id="wechatpay-tab" data-toggle="tab" aria-controls="wechatpay" aria-expanded="false"><i class="icon icon-wepay"></i> wechat payment</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/langgithub" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
+
+    <div class="copyright">
+    	
+        <div class="publishby">
+        	Theme by <a href="https://github.com/cofess" target="_blank"> cofess </a>base on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+        </div>
+    </div>
+</footer>
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+<script>
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+</script>
+<script src="/js/plugin.min.js"></script>
+<script src="/js/application.js"></script>
+
+    <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: 'Posts',
+            PAGES: 'Pages',
+            CATEGORIES: 'Categories',
+            TAGS: 'Tags',
+            UNTITLED: '(Untitled)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+<script src="/js/insight.js"></script>
+
+
+
+
+
+   
+
+
+<!-- custom analytics part create by xiamo -->
+<script defer src="https://cdn1.lncld.net/static/js/av-min-1.2.1.js"></script>
+<script defer>
+AV.init({
+  appId: 'eMPxlnHK3gsE9VV9ehB05y5C-gzGzoHsz',
+  appKey: 'h5S0YSOKqe4rF8HMVfJqruw7'
+});
+
+function showTime(Counter) {
+	var query = new AV.Query(Counter);
+		var visitors= $('.leancloud_visitors');
+		query.greaterThanOrEqualTo("time", 0);		
+		query.find({
+			success: function(results) {
+				if (results.length == 0) {				
+					return;
+				}
+				var data = results;
+				visitors.each(function(){
+					var url = $(this).attr('id').trim();					
+					for (var i = 0; i < data.length; i++) {
+						var object = data[i];
+						var content = object.get('time');
+						var _url = object.get('url')
+						if(url == _url){
+							$(this).text(content);
+						}
+					}
+				})
+				
+			},
+			error: function(object, error) {
+				console.log("Error: " + error.code + " " + error.message);
+			}
+		});
+}
+
+function addCount(Counter) {
+	var Counter = AV.Object.extend("Counter");
+	url = $(".leancloud_visitors").attr('id').trim();
+	title = $(".leancloud_visitors").attr('data-flag-title').trim();
+	var query = new AV.Query(Counter);
+	query.equalTo("url", url);
+	query.find({
+		success: function(results) {
+			if (results.length > 0) {
+				var counter = results[0];
+				counter.fetchWhenSave(true);
+				counter.increment("time");
+				counter.save(null, {
+					success: function(counter) {
+						var content = counter.get('time');
+						$(document.getElementById(url)).text(content);
+					},
+					error: function(counter, error) {
+						console.log('Failed to save Visitor num, with error message: ' + error.message);
+					}
+				});
+			} else {
+				var newcounter = new Counter();
+				newcounter.set("title", title);
+				newcounter.set("url", url);
+				newcounter.set("time", 1);
+				newcounter.save(null, {
+					success: function(newcounter) {
+					    console.log("newcounter.get('time')="+newcounter.get('time'));
+						var content = newcounter.get('time');
+						$(document.getElementById(url)).text(content);
+					},
+					error: function(newcounter, error) {
+						console.log('Failed to create');
+					}
+				});
+			}
+		},
+		error: function(error) {
+			console.log('Error:' + error.code + " " + error.message);
+		}
+	});
+}
+$(function() {
+	var Counter = AV.Object.extend("Counter");
+	if ($('.leancloud_visitors').length == 1) {
+		addCount(Counter);
+	} else {
+		showTime(Counter);
+	}
+}); 
+</script>
+
+
+
+   
+    
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/valine"></script>
+  <script type="text/javascript">
+  var GUEST = ['nick', 'mail', 'link'];
+  var meta = 'nick,mail,link';
+  meta = meta.split(',').filter(function(item) {
+    return GUEST.indexOf(item) > -1;
+  });
+  new Valine({
+    el: '#vcomments',
+    verify: false,
+    notify: false,
+    appId: '',
+    appKey: '',
+    placeholder: 'Just go go',
+    avatar: 'mm',
+    meta: meta,
+    pageSize: '10' || 10,
+    visitor: false
+  });
+  </script>
+
+     
+
+
+
+
+
+
+
+</body>
+</html>

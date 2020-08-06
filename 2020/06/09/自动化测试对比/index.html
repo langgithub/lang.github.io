@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform">
+  <meta http-equiv="Cache-Control" content="no-siteapp">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000">
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top">
+  
+  
+  <title>自动化测试对比 | Hexo</title>
+  <meta name="description" content="自动化对比   模块 UIAutomation appium selenium pyppeteer 终极武器(chrome-devtools-protocol)     跨平台 否 Android，ios 是 chrome 浏览器就行 是   缺点 无法跨平台 adb驱动 太强大 chrome 协议 底层   driver google原生 UIAutomation #很多 chrome all">
+<meta name="keywords" content="自动化">
+<meta property="og:type" content="article">
+<meta property="og:title" content="自动化测试对比">
+<meta property="og:url" content="https://langgithub.github.io/2020/06/09/自动化测试对比/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="自动化对比   模块 UIAutomation appium selenium pyppeteer 终极武器(chrome-devtools-protocol)     跨平台 否 Android，ios 是 chrome 浏览器就行 是   缺点 无法跨平台 adb驱动 太强大 chrome 协议 底层   driver google原生 UIAutomation #很多 chrome all">
+<meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2020-06-09T09:29:21.396Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="自动化测试对比">
+<meta name="twitter:description" content="自动化对比   模块 UIAutomation appium selenium pyppeteer 终极武器(chrome-devtools-protocol)     跨平台 否 Android，ios 是 chrome 浏览器就行 是   缺点 无法跨平台 adb驱动 太强大 chrome 协议 底层   driver google原生 UIAutomation #很多 chrome all">
+  <!-- Canonical links -->
+  <link rel="canonical" href="https://langgithub.github.io/2020/06/09/自动化测试对比/index.html">
+  
+    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  <link rel="stylesheet" href="/css/style.css">
+  
+  
+  
+  
+</head>
+
+
+<body class="main-center" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="https://github.com/langgithub" target="_blank">
+          <img class="img-circle img-rotate" src="/images/avatar.jpg" width="200" height="200">
+        </a>
+        <h2 id="name" class="hidden-xs hidden-sm">yuanlang</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md">Python</h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Beijing, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
+
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="Search" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="Type something..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+    </div>
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
+</div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav ">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">Home</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">Archives</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">Categories</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">Tags</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-repository">
+          <a href="/repository">
+            
+            <i class="icon icon-project"></i>
+            
+            <span class="menu-title">Repository</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-books">
+          <a href="/books">
+            
+            <i class="icon icon-book-fill"></i>
+            
+            <span class="menu-title">Books</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-links">
+          <a href="/links">
+            
+            <i class="icon icon-friendship"></i>
+            
+            <span class="menu-title">Links</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">About</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/langgithub" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
+
+    </nav>
+  </div>
+</header>
+
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    
+      <div class="widget">
+    <h3 class="widget-title">Board</h3>
+    <div class="widget-body">
+        <div id="board">
+            <div class="content">
+                qq群号：906761431 </br> <img src="/img/WechatIMG156.png"/>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget-body">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">9</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/code-Android/">code-Android</a><span class="category-list-count">14</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/code-c/">code-c++</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/code-go/">code-go</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/code-ios/">code-ios</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/code-java/">code-java</a><span class="category-list-count">8</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/code-javascript/">code-javascript</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/code-python/">code-python</a><span class="category-list-count">18</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/区块链/">区块链</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/数据存储-bigdata/">数据存储-bigdata</a><span class="category-list-count">7</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/数据存储-mongodb/">数据存储-mongodb</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/数据存储-mysql/">数据存储-mysql</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/爬虫-Android逆向/">爬虫-Android逆向</a><span class="category-list-count">24</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/爬虫-js逆向/">爬虫-js逆向</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/爬虫-玄学/">爬虫-玄学</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/算法-NLP/">算法-NLP</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/算法-数据结构/">算法-数据结构</a><span class="category-list-count">7</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/算法-机器学习/">算法-机器学习</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/辅助工具/">辅助工具</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/面试/">面试</a><span class="category-list-count">12</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget-body">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/7z/">7z</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ARM/">ARM</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Activity/">Activity</a><span class="tag-list-count">8</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Ajax/">Ajax</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android/">Android</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android刷机/">Android刷机</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android加固/">Android加固</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android源码/">Android源码</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android签名/">Android签名</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android逆向/">Android逆向</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/IDA/">IDA</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Linux/">Linux</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/NLP/">NLP</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/WSGI/">WSGI</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/YouCompleteMe/">YouCompleteMe</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/c/">c++</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/frida/">frida</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/git/">git</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/go/">go</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/hadoop/">hadoop</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/hexo/">hexo</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/hook/">hook</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/http/">http</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/https/">https</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ios开发/">ios开发</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/java/">java</a><span class="tag-list-count">8</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/javascript/">javascript</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/jvm/">jvm</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/linux/">linux</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/linux操作系统/">linux操作系统</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/maven/">maven</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mongodb/">mongodb</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mysql/">mysql</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ndk/">ndk</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/netty/">netty</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ptrace/">ptrace</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/python/">python</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/python源码阅读/">python源码阅读</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/so/">so</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/sublime-text3/">sublime text3</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/tar/">tar</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/vim/">vim</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/xposed/">xposed</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/zip/">zip</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/区块链/">区块链</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/手机群控/">手机群控</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/操作系统/">操作系统</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/数据库/">数据库</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/数据结构/">数据结构</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/文件结构/">文件结构</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/机器学习/">机器学习</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/案例/">案例</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/滑块验证码/">滑块验证码</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/爬虫/">爬虫</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/简单图形验证码/">简单图形验证码</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/算法/">算法</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/线性代数/">线性代数</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/统计/">统计</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/脱壳/">脱壳</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/自动化/">自动化</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/计算机网络原理/">计算机网络原理</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/锁/">锁</a><span class="tag-list-count">1</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget-body tagcloud">
+      <a href="/tags/7z/" style="font-size: 13px;">7z</a> <a href="/tags/ARM/" style="font-size: 13px;">ARM</a> <a href="/tags/Activity/" style="font-size: 13.6px;">Activity</a> <a href="/tags/Ajax/" style="font-size: 13px;">Ajax</a> <a href="/tags/Android/" style="font-size: 13px;">Android</a> <a href="/tags/Android刷机/" style="font-size: 13.1px;">Android刷机</a> <a href="/tags/Android加固/" style="font-size: 13px;">Android加固</a> <a href="/tags/Android源码/" style="font-size: 13.9px;">Android源码</a> <a href="/tags/Android签名/" style="font-size: 13px;">Android签名</a> <a href="/tags/Android逆向/" style="font-size: 13.1px;">Android逆向</a> <a href="/tags/IDA/" style="font-size: 13px;">IDA</a> <a href="/tags/Linux/" style="font-size: 13.7px;">Linux</a> <a href="/tags/NLP/" style="font-size: 13.3px;">NLP</a> <a href="/tags/WSGI/" style="font-size: 13px;">WSGI</a> <a href="/tags/YouCompleteMe/" style="font-size: 13px;">YouCompleteMe</a> <a href="/tags/c/" style="font-size: 13px;">c++</a> <a href="/tags/frida/" style="font-size: 13px;">frida</a> <a href="/tags/git/" style="font-size: 13px;">git</a> <a href="/tags/go/" style="font-size: 13px;">go</a> <a href="/tags/hadoop/" style="font-size: 13.5px;">hadoop</a> <a href="/tags/hexo/" style="font-size: 13px;">hexo</a> <a href="/tags/hook/" style="font-size: 13px;">hook</a> <a href="/tags/http/" style="font-size: 13.1px;">http</a> <a href="/tags/https/" style="font-size: 13px;">https</a> <a href="/tags/ios开发/" style="font-size: 13px;">ios开发</a> <a href="/tags/java/" style="font-size: 13.6px;">java</a> <a href="/tags/javascript/" style="font-size: 13px;">javascript</a> <a href="/tags/jvm/" style="font-size: 13px;">jvm</a> <a href="/tags/linux/" style="font-size: 13.1px;">linux</a> <a href="/tags/linux操作系统/" style="font-size: 13px;">linux操作系统</a> <a href="/tags/maven/" style="font-size: 13px;">maven</a> <a href="/tags/mongodb/" style="font-size: 13px;">mongodb</a> <a href="/tags/mysql/" style="font-size: 13.3px;">mysql</a> <a href="/tags/ndk/" style="font-size: 13.1px;">ndk</a> <a href="/tags/netty/" style="font-size: 13.1px;">netty</a> <a href="/tags/ptrace/" style="font-size: 13.2px;">ptrace</a> <a href="/tags/python/" style="font-size: 13.8px;">python</a> <a href="/tags/python源码阅读/" style="font-size: 13.5px;">python源码阅读</a> <a href="/tags/so/" style="font-size: 14px;">so</a> <a href="/tags/sublime-text3/" style="font-size: 13px;">sublime text3</a> <a href="/tags/tar/" style="font-size: 13px;">tar</a> <a href="/tags/vim/" style="font-size: 13px;">vim</a> <a href="/tags/xposed/" style="font-size: 13.1px;">xposed</a> <a href="/tags/zip/" style="font-size: 13px;">zip</a> <a href="/tags/区块链/" style="font-size: 13.2px;">区块链</a> <a href="/tags/手机群控/" style="font-size: 13px;">手机群控</a> <a href="/tags/操作系统/" style="font-size: 13px;">操作系统</a> <a href="/tags/数据库/" style="font-size: 13px;">数据库</a> <a href="/tags/数据结构/" style="font-size: 13.5px;">数据结构</a> <a href="/tags/文件结构/" style="font-size: 13px;">文件结构</a> <a href="/tags/机器学习/" style="font-size: 13.2px;">机器学习</a> <a href="/tags/案例/" style="font-size: 13px;">案例</a> <a href="/tags/滑块验证码/" style="font-size: 13px;">滑块验证码</a> <a href="/tags/爬虫/" style="font-size: 13px;">爬虫</a> <a href="/tags/简单图形验证码/" style="font-size: 13.1px;">简单图形验证码</a> <a href="/tags/算法/" style="font-size: 13.4px;">算法</a> <a href="/tags/线性代数/" style="font-size: 13px;">线性代数</a> <a href="/tags/统计/" style="font-size: 13px;">统计</a> <a href="/tags/脱壳/" style="font-size: 13.5px;">脱壳</a> <a href="/tags/自动化/" style="font-size: 13.1px;">自动化</a> <a href="/tags/计算机网络原理/" style="font-size: 13px;">计算机网络原理</a> <a href="/tags/锁/" style="font-size: 13px;">锁</a>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Archive</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/06/">June 2020</a><span class="archive-list-count">135</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/面试/">面试</a>
+              </p>
+              <p class="item-title">
+                <a href="/2020/06/09/链表相关题/" class="title">链表相关题</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2020-06-09T09:29:21.397Z" itemprop="datePublished">2020-06-09</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/算法-数据结构/">算法-数据结构</a>
+              </p>
+              <p class="item-title">
+                <a href="/2020/06/09/递归算法/" class="title">递归算法</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2020-06-09T09:29:21.396Z" itemprop="datePublished">2020-06-09</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/算法-数据结构/">算法-数据结构</a>
+              </p>
+              <p class="item-title">
+                <a href="/2020/06/09/贪心算法/" class="title">贪心算法</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2020-06-09T09:29:21.396Z" itemprop="datePublished">2020-06-09</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/面试/">面试</a>
+              </p>
+              <p class="item-title">
+                <a href="/2020/06/09/计算机网络原理/" class="title">计算机网络原理</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2020-06-09T09:29:21.396Z" itemprop="datePublished">2020-06-09</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/爬虫-Android逆向/">爬虫-Android逆向</a>
+              </p>
+              <p class="item-title">
+                <a href="/2020/06/09/逆向-ARM指令/" class="title">逆向-ARM指令</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2020-06-09T09:29:21.396Z" itemprop="datePublished">2020-06-09</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-自动化测试对比" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
+  
+    <h1 class="article-title" itemprop="name">
+      自动化测试对比
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/2020/06/09/自动化测试对比/" class="article-date">
+	  <time datetime="2020-06-09T09:29:21.395Z" itemprop="datePublished">2020-06-09</time>
+	</a>
+</span>
+        
+  <span class="article-category">
+    <i class="icon icon-folder"></i>
+    <a class="article-category-link" href="/categories/爬虫-玄学/">爬虫-玄学</a>
+  </span>
+
+        
+  <span class="article-tag">
+    <i class="icon icon-tags"></i>
+	<a class="article-tag-link" href="/tags/自动化/">自动化</a>
+  </span>
+
+
+        
+
+	<span class="article-read hidden-xs">
+    	<i class="icon icon-eye-fill" aria-hidden="true"></i>
+    	<span id="/2020/06/09/自动化测试对比/" class="leancloud_visitors"  data-flag-title="自动化测试对比">0</span>
+    </span>
+
+
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/2020/06/09/自动化测试对比/#comments" class="article-comment-link">Comments</a></span>
+        
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <h2 id="自动化对比"><a href="#自动化对比" class="headerlink" title="自动化对比"></a>自动化对比</h2><table>
+<thead>
+<tr>
+<th style="text-align:left">模块</th>
+<th style="text-align:right">UIAutomation</th>
+<th style="text-align:right">appium</th>
+<th style="text-align:right">selenium</th>
+<th style="text-align:right">pyppeteer</th>
+<th style="text-align:right">终极武器(chrome-devtools-protocol)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">跨平台</td>
+<td style="text-align:right">否</td>
+<td style="text-align:right">Android，ios</td>
+<td style="text-align:right">是</td>
+<td style="text-align:right">chrome 浏览器就行</td>
+<td style="text-align:right">是</td>
+</tr>
+<tr>
+<td style="text-align:left">缺点</td>
+<td style="text-align:right">无法跨平台</td>
+<td style="text-align:right">adb驱动</td>
+<td style="text-align:right">太强大</td>
+<td style="text-align:right">chrome 协议</td>
+<td style="text-align:right">底层</td>
+</tr>
+<tr>
+<td style="text-align:left">driver</td>
+<td style="text-align:right">google原生</td>
+<td style="text-align:right">UIAutomation</td>
+<td style="text-align:right">#很多</td>
+<td style="text-align:right">chrome</td>
+<td style="text-align:right">all</td>
+</tr>
+</tbody>
+</table>
+<p>#很多：</p>
+<ol>
+<li><p>selenium可支持的PC浏览器驱动包括：</p>
+<p> safari driver【包含在selenium server中】</p>
+<p> ie driver</p>
+<p> chrome driver 【第三方】</p>
+<p> opera driver【第三方]</p>
+</li>
+<li><p>selenium可支持的伪浏览器驱动：</p>
+<p> PhantomJS Driver【第三方,停止更新】</p>
+<p> HtmlUnit Driver【包含在selenium server中】</p>
+</li>
+<li><p>selenium可支持的移动端驱动：</p>
+<p> Windows Phone driver </p>
+<p> Selendroid-Selenium for Android【第三方】</p>
+<p> ios-driver【第三方】</p>
+<p> Appium 支持iphone、ipad、android、FirefoxOS【第三方】</p>
+</li>
+</ol>
+<h2 id="驱动代码"><a href="#驱动代码" class="headerlink" title="驱动代码"></a>驱动代码</h2><ul>
+<li><h3 id="UIAutomation"><a href="#UIAutomation" class="headerlink" title="UIAutomation"></a>UIAutomation</h3></li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">python 端安装 uiautomator2 client：</span><br><span class="line">pip install uiautomator2</span><br><span class="line">Android端安装 ATX server</span><br><span class="line">安装方法</span><br><span class="line">离线</span><br><span class="line">    将init_machine.sh,及android_package.zip上传至/data/local/tmp目录下</span><br><span class="line">    给手机安装termux，此为命令行工具，打开软件</span><br><span class="line">    输入su,切换至管理员账户</span><br><span class="line">    输入cd data/local/tmp,因为云手机不能打/符，所有用tab键来凑齐。</span><br><span class="line">    输入sh init_machine.sh,即可安装好软件和服务</span><br><span class="line">    </span><br><span class="line">usb线连</span><br><span class="line">    在电脑上输入python -m uiautomator2 init即可</span><br><span class="line">    ### 2、打开ATX</span><br><span class="line">    打开ATX 点击&quot;启动uiautomator&quot;</span><br><span class="line">    ### 3、打开QpythonL</span><br><span class="line">    一定要先打开这个软件，不然你python脚本会上传不成功</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line">import uiautomator2 as u2</span><br><span class="line"></span><br><span class="line"># 0.0.0.0 为本机，127.0.0.1这个也行，这个连接是在手机上运行的</span><br><span class="line">d = u2.connect(&apos;http://0.0.0.0:7912&apos;)</span><br><span class="line"># 如果远程操作，就填入手机ATX显示的ip，下面有图</span><br><span class="line"># d = u2.connect(&apos;http://172.17.2.237:7912&apos;)</span><br><span class="line"># 字符串为包名，下面有获取包名教程</span><br><span class="line">sess = d.session(&quot;com.tencent.wework&quot;)</span><br><span class="line"></span><br><span class="line">def my_click(sess, ele, timeout=3):</span><br><span class="line">    ele.wait(timeout=timeout) # 等待超时，因为可能此时界面动画，或者反映迟钝，该控件还没出现</span><br><span class="line">    x, y = ele.center() # 找到该空间的中间坐标</span><br><span class="line">    sess.touch.down(x, y) # 在此坐标按下</span><br><span class="line">    time.sleep(0.3)</span><br><span class="line">    sess.touch.up() #等待3秒后抬起</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">def click_search_btn(sess):</span><br><span class="line">    ele = sess(resourceId=package_name+&quot;:id/e3g&quot;, #找到该空间的id</span><br><span class="line">               className=&quot;android.widget.TextView&quot;,# 找到该空间的类名</span><br><span class="line">               instance=0) #如果根据属性查找有多个控件，则找第一个</span><br><span class="line">    my_click(sess, ele, 20)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">click_search_btn(sess)</span><br><span class="line">print(&apos;begin to input&apos;)</span><br><span class="line">ele = sess(resourceId=&quot;com.tencent.wework:id/dpu&quot;, className=&quot;android.widget.EditText&quot;)</span><br><span class="line">ele.set_text(phone) # 将手机号填入</span><br><span class="line">print(&apos;end to input&apos;)</span><br><span class="line">time.sleep(2)</span><br><span class="line"># print(u&quot;点击搜索&quot;)</span><br><span class="line"># 点击搜索</span><br><span class="line">sess(resourceId=&quot;com.tencent.wework:id/azq&quot;,</span><br><span class="line">           className=&quot;android.widget.RelativeLayout&quot;).child(className=&quot;android.widget.TextView&quot;).click() # 因为该控件没有id，所以先找它爹，再找它爹的儿子控件，.click()直接触发点击事件。</span><br><span class="line">ele1 = sess(resourceId=&quot;com.tencent.wework:id/sa&quot;,</span><br><span class="line">               className=&quot;android.widget.TextView&quot;)</span><br><span class="line">ele1.get_text() # 获取标签文本内容</span><br></pre></td></tr></table></figure>
+<ul>
+<li><h3 id="Seleinum"><a href="#Seleinum" class="headerlink" title="Seleinum"></a>Seleinum</h3></li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">安装：</span><br><span class="line">pip install selenium</span><br><span class="line">自行下载需要驱动的driver：如chromedriver</span><br><span class="line">实用executable_path 引入driver路径</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line">from selenium import webdriver</span><br><span class="line">import time</span><br><span class="line"> </span><br><span class="line">drivers = [&apos;HtmlUnit&apos;, &apos;PhantomJS&apos;, &apos;Chrome&apos;, &apos;FF&apos;, &apos;IE&apos;] </span><br><span class="line"> </span><br><span class="line">dervers_time = &#123;</span><br><span class="line">	&apos;HtmlUnit&apos; : 0,</span><br><span class="line">	&apos;PhantomJS&apos; : 0,</span><br><span class="line">	&apos;Chrome&apos; : 0,</span><br><span class="line">	&apos;FF&apos; : 0,</span><br><span class="line">	&apos;IE&apos; : 0,</span><br><span class="line">&#125;</span><br><span class="line">times = 50</span><br><span class="line">def run_with_Chrome():</span><br><span class="line">	common_step(webdriver.Chrome())</span><br><span class="line"> </span><br><span class="line">def run_with_FF():</span><br><span class="line">	common_step(webdriver.Firefox())</span><br><span class="line">	</span><br><span class="line">def run_with_IE():</span><br><span class="line">	common_step(webdriver.Ie())</span><br><span class="line"> </span><br><span class="line">def run_with_PhantomJS():</span><br><span class="line">	common_step(webdriver.PhantomJS(executable_path=r&apos;C:\Python27\Scripts\phantomjs.exe&apos;))</span><br><span class="line">	</span><br><span class="line">def run_with_HtmlUnit():</span><br><span class="line">	driver = webdriver.Remote(&quot;http://localhost:4444/wd/hub&quot;, </span><br><span class="line">								desired_capabilities=webdriver.DesiredCapabilities.HTMLUNIT)</span><br><span class="line">	common_step(driver)</span><br><span class="line">	</span><br><span class="line">def common_step(driver):</span><br><span class="line">	driver.get(&apos;http://www.baidu.com&apos;)</span><br><span class="line">	ele = driver.find_element_by_id(&apos;su&apos;)</span><br><span class="line">	print ele.get_attribute(&apos;value&apos;)</span><br><span class="line">	driver.quit()</span><br></pre></td></tr></table></figure>
+<ul>
+<li><h3 id="Appium"><a href="#Appium" class="headerlink" title="Appium"></a>Appium</h3></li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">1.node.js 安装</span><br><span class="line">brew install node</span><br><span class="line">npm install -g appium  # get appium     </span><br><span class="line">npm install wd         # get appium client</span><br><span class="line"></span><br><span class="line">直接用npm下载往往不成功，这是需要通过代理来下载</span><br><span class="line">具体方法如下：</span><br><span class="line">npm i cnpm -g --registry=http://registry.npm.taobao.org</span><br><span class="line">cnpm i appium -g       # get appium</span><br><span class="line">cnpm i wd -g　　       # get appium client</span><br><span class="line">cnpm i appium-doctor 　# get appium-doctor</span><br><span class="line"></span><br><span class="line">2.检查Appium成功安装</span><br><span class="line">appium-doctor</span><br><span class="line">更具提示配置 xcode 和 Android SDK</span><br><span class="line"></span><br><span class="line">3.下载appium客户端更加方便地址 github</span><br><span class="line">4.python client 安装 pip install Appium_Python_Client</span><br><span class="line">5.启动appium server .用客户端appium 启动即可</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br></pre></td><td class="code"><pre><span class="line"># encoding: utf-8</span><br><span class="line">&quot;&quot;&quot;</span><br><span class="line">--------------------------------------</span><br><span class="line">@describe 自动化微信添加好友</span><br><span class="line">@version: 1.0</span><br><span class="line">@project: operator_spider</span><br><span class="line">@file: app_chrome.py</span><br><span class="line">@author: yuanlang </span><br><span class="line">@time: 2019-02-19 10:14</span><br><span class="line">---------------------------------------</span><br><span class="line">&quot;&quot;&quot;</span><br><span class="line">import unittest</span><br><span class="line">from time import sleep</span><br><span class="line"></span><br><span class="line">from appium import webdriver</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">class MyTestCase(unittest.TestCase):</span><br><span class="line"></span><br><span class="line">    def setUp(self):</span><br><span class="line">        capabilities = &#123;</span><br><span class="line">            &apos;platformName&apos;: &apos;Android&apos;,</span><br><span class="line">            &apos;platformVersion&apos;: &quot;5.1&quot;,</span><br><span class="line">            &apos;deviceName&apos;: &quot;mx4&quot;,</span><br><span class="line">            &apos;appPackage&apos;: &apos;com.tencent.mm&apos;,</span><br><span class="line">            &apos;appActivity&apos;: &apos;.ui.LauncherUI&apos;,</span><br><span class="line">            &apos;automationName&apos;: &apos;Uiautomator2&apos;,</span><br><span class="line">            &apos;unicodeKeyboard&apos;: True,</span><br><span class="line">            &apos;resetKeyboard&apos;: True,</span><br><span class="line">            &apos;noReset&apos;: True,</span><br><span class="line">            &apos;chromeOptions&apos;: &#123;&apos;androidProcess&apos;: &apos;com.tencent.mm:tools&apos;&#125;,</span><br><span class="line">        &#125;</span><br><span class="line">        self.driver = webdriver.Remote(&quot;http://127.0.0.1:4723/wd/hub&quot;, capabilities)</span><br><span class="line">        self.driver.implicitly_wait(30)</span><br><span class="line"></span><br><span class="line">        sleep(5)</span><br><span class="line"></span><br><span class="line">    def test_chromeApp(self):</span><br><span class="line">        # 点击加号</span><br><span class="line">        print(&quot;search&quot;)</span><br><span class="line">        driver = self.driver</span><br><span class="line">        el1 = driver.find_element_by_id(&quot;com.tencent.mm:id/gd&quot;)</span><br><span class="line">        el1.click()</span><br><span class="line">        sleep(5)</span><br><span class="line">        el2 = driver.find_element_by_xpath(</span><br><span class="line">            &quot;/hierarchy/android.widget.FrameLayout/android.widget.ListView/android.widget.LinearLayout[2]/android.widget.LinearLayout/android.widget.TextView&quot;)</span><br><span class="line">        el2.click()</span><br><span class="line">        sleep(5)</span><br><span class="line">        el3 = driver.find_element_by_id(&quot;com.tencent.mm:id/hx&quot;)</span><br><span class="line">        el3.click()</span><br><span class="line">        sleep(5)</span><br><span class="line">        driver.find_element_by_id(&quot;com.tencent.mm:id/hx&quot;).send_keys(&quot;15775691981&quot;)</span><br><span class="line">        sleep(5)</span><br><span class="line">        driver.find_element_by_id(&quot;com.tencent.mm:id/l4&quot;).click()</span><br><span class="line">        sleep(5)</span><br><span class="line">        print(driver.context)</span><br><span class="line">        name = driver.find_element_by_id(&quot;com.tencent.mm:id/ang&quot;).text</span><br><span class="line">        print(name)</span><br><span class="line"></span><br><span class="line">    def tearDown(self):</span><br><span class="line">        self.driver.close_app()</span><br><span class="line">        self.driver.quit()</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">if __name__ == &apos;__main__&apos;:</span><br><span class="line">    unittest.main()</span><br></pre></td></tr></table></figure>
+<h2 id="pyppeteer"><a href="#pyppeteer" class="headerlink" title="pyppeteer"></a>pyppeteer</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">原生是node.js 开发基于chrome-devtools-protocol + websocket</span><br><span class="line">python也有对应改写版</span><br><span class="line">项目由google维护</span><br><span class="line"></span><br><span class="line">pip install pyppeteer</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br></pre></td><td class="code"><pre><span class="line"># encoding: utf-8</span><br><span class="line">&quot;&quot;&quot;</span><br><span class="line">--------------------------------------</span><br><span class="line">@describe </span><br><span class="line">@version: 1.0</span><br><span class="line">@project: operator_spider</span><br><span class="line">@file: dddd.py</span><br><span class="line">@author: yuanlang </span><br><span class="line">@time: 2019-02-21 19:11</span><br><span class="line">---------------------------------------</span><br><span class="line">&quot;&quot;&quot;</span><br><span class="line"></span><br><span class="line">import asyncio</span><br><span class="line">import pyppeteer</span><br><span class="line">from collections import namedtuple</span><br><span class="line"></span><br><span class="line">Response = namedtuple(&quot;rs&quot;, &quot;title url html cookies headers history status&quot;)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">async def get_html(url, timeout=30):</span><br><span class="line">    # 默认30s</span><br><span class="line">    #,executablePath=&quot;&quot;</span><br><span class="line">    browser = await pyppeteer.launch(headless=False, args=[&apos;--no-sandbox&apos;])</span><br><span class="line">    page = await  browser.newPage()</span><br><span class="line">    js=&quot;&quot;&quot;</span><br><span class="line">    function sniffDetector() &#123;</span><br><span class="line">    const userAgent = window.navigator.userAgent;</span><br><span class="line">    const platform = window.navigator.platform;</span><br><span class="line"></span><br><span class="line">    window.navigator.__defineGetter__(&apos;userAgent&apos;, function() &#123;</span><br><span class="line">      window.navigator.sniffed = true;</span><br><span class="line">      return userAgent;</span><br><span class="line">    &#125;);</span><br><span class="line"></span><br><span class="line">    window.navigator.__defineGetter__(&apos;platform&apos;, function() &#123;</span><br><span class="line">      window.navigator.sniffed = true;</span><br><span class="line">      return platform;</span><br><span class="line">    &#125;);</span><br><span class="line">    //自动化反反爬虫，反自动化检测</span><br><span class="line">    Object.defineProperty(navigator, &apos;webdriver&apos;, &#123;</span><br><span class="line">        get: () =&gt; false,</span><br><span class="line">    &#125;);</span><br><span class="line">  &#125;</span><br><span class="line">    &quot;&quot;&quot;</span><br><span class="line">    await page.evaluateOnNewDocument(js)</span><br><span class="line">    res = await page.goto(url, options=&#123;&apos;timeout&apos;: int(timeout * 1000)&#125;)</span><br><span class="line">    await asyncio.sleep(5)</span><br><span class="line">    data = await page.content()</span><br><span class="line">    title = await page.title()</span><br><span class="line">    resp_cookies = await page.cookies()</span><br><span class="line">    resp_headers = res.headers</span><br><span class="line">    resp_history = None</span><br><span class="line">    resp_status = res.status</span><br><span class="line">    response = Response(title=title, url=url,</span><br><span class="line">                        html=data,</span><br><span class="line">                        cookies=resp_cookies,</span><br><span class="line">                        headers=resp_headers,</span><br><span class="line">                        history=resp_history,</span><br><span class="line">                        status=resp_status)</span><br><span class="line">    return response</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">if __name__ == &apos;__main__&apos;:</span><br><span class="line">    url_list = [&quot;https://jx.ac.10086.cn&quot;]</span><br><span class="line">    task = (get_html(url) for url in url_list)</span><br><span class="line"></span><br><span class="line">    loop = asyncio.get_event_loop()</span><br><span class="line">    results = loop.run_until_complete(asyncio.gather(*task))</span><br><span class="line">    for res in results:</span><br><span class="line">        print(res)</span><br></pre></td></tr></table></figure>
+<h2 id="chrome-devtools-protocol"><a href="#chrome-devtools-protocol" class="headerlink" title="chrome-devtools-protocol"></a>chrome-devtools-protocol</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">底层采用websocket 协议控制浏览器。[协议连接](https://chromedevtools.github.io/devtools-protocol/)</span><br><span class="line">安装</span><br><span class="line">1.pip install pychrom</span><br><span class="line">2./Chromium --remote-debugging-port=9222</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">import pychrome</span><br><span class="line"></span><br><span class="line">browser = pychrome.Browser(url=&quot;http://127.0.0.1:9222&quot;)</span><br><span class="line">tab = browser.new_tab()</span><br><span class="line"></span><br><span class="line">def request_will_be_sent(**kwargs):</span><br><span class="line">    print(&quot;loading: %s&quot; % kwargs.get(&apos;request&apos;).get(&apos;url&apos;))</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">tab.set_listener(&quot;Network.requestWillBeSent&quot;, request_will_be_sent)</span><br><span class="line"></span><br><span class="line">tab.start()</span><br><span class="line">tab.call_method(&quot;Network.enable&quot;)</span><br><span class="line">tab.call_method(&quot;Page.navigate&quot;, url=&quot;https://jx.ac.10086.cn&quot;, _timeout=5)</span><br><span class="line">import time</span><br><span class="line"># print(&quot;ok&quot;)</span><br><span class="line">time.sleep(5)</span><br><span class="line">result=tab.call_method(&quot;Runtime.evaluate&quot;,expression=&quot;document.documentElement.outerHTML&quot;)</span><br><span class="line">print(result)</span><br><span class="line">tab.stop()</span><br></pre></td></tr></table></figure>
+<h1 id="自动化反反爬虫"><a href="#自动化反反爬虫" class="headerlink" title="自动化反反爬虫"></a>自动化反反爬虫</h1><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Object.defineProperty(navigator, &apos;webdriver&apos;, &#123;</span><br><span class="line">        get: () =&gt; false,</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line">&apos;&apos;&apos;</span><br><span class="line">// overwrite the `languages` property to use a custom getter</span><br><span class="line">Object.defineProperty(navigator, &quot;languages&quot;, &#123;</span><br><span class="line">  get: function() &#123;</span><br><span class="line">    return [&quot;zh-CN&quot;,&quot;zh&quot;,&quot;zh-TW&quot;,&quot;en-US&quot;,&quot;en&quot;];</span><br><span class="line">  &#125;</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line">// Overwrite the `plugins` property to use a custom getter.</span><br><span class="line">Object.defineProperty(navigator, &apos;plugins&apos;, &#123;</span><br><span class="line">  get: () =&gt; [1, 2, 3, 4, 5],</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line">// Pass the Webdriver test</span><br><span class="line">Object.defineProperty(navigator, &apos;webdriver&apos;, &#123;</span><br><span class="line">  get: () =&gt; false,</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">// Pass the Chrome Test.</span><br><span class="line">// We can mock this in as much depth as we need for the test.</span><br><span class="line">window.navigator.chrome = &#123;</span><br><span class="line">  runtime: &#123;&#125;,</span><br><span class="line">  // etc.</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">// Pass the Permissions Test.</span><br><span class="line">const originalQuery = window.navigator.permissions.query;</span><br><span class="line">window.navigator.permissions.query = (parameters) =&gt; (</span><br><span class="line">  parameters.name === &apos;notifications&apos; ?</span><br><span class="line">    Promise.resolve(&#123; state: Notification.permission &#125;) :</span><br><span class="line">    originalQuery(parameters)</span><br><span class="line">);</span><br><span class="line">&apos;&apos;&apos;</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"># 修改chromedriver</span><br><span class="line">$ hexedit chromedriver </span><br><span class="line"></span><br><span class="line">        # 操作</span><br><span class="line">        1. tab 跳转到string栏</span><br><span class="line">        2. ctrl+S 查找 var key = &apos;$cdc_asdjflasutopfhvcZLmcfl_&apos;（对于2.40版本）</span><br><span class="line">        3. 替换&apos;$cdc_asdjflasutopfhvcZLmcfl_&apos;为任意值</span><br><span class="line">        4. ctrl+X 保存</span><br><span class="line"></span><br><span class="line"># 移动chromedriver 到 /usr/bin</span><br><span class="line">$ mv chromedriver /usr/bin</span><br><span class="line"></span><br><span class="line">[详细连接](&quot;https://zhuanlan.zhihu.com/p/43581988?utm_source=wechat_session&amp;utm_medium=social&amp;utm_oi=32546582691840&amp;from=groupmessage&quot;)</span><br></pre></td></tr></table></figure>
+<p>总结：seleium 是采用webdriver 协议 ,seleium server端也是使用chrome-devtools-protocol。只不过为了跨平台采用webdriver restful api 形式开发。chrome-devtools-protocol 可以使用 ./chromium –remote-debug 自动化测试</p>
+
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="https://langgithub.github.io/2020/06/09/自动化测试对比/" title="自动化测试对比" target="_blank" rel="external">https://langgithub.github.io/2020/06/09/自动化测试对比/</a>
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN协议</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+
+<div class="panel panel-default panel-badger">
+  <div class="panel-body">
+    <figure class="media">
+      <div class="media-left">
+        <a href="https://github.com/langgithub" target="_blank" class="img-burn thumb-sm visible-lg">
+          <img src="/images/avatar.jpg" class="img-rounded w-full" alt="">
+        </a>
+      </div>
+      <div class="media-body">
+        <h3 class="media-heading"><a href="https://github.com/langgithub" target="_blank"><span class="text-dark">yuanlang</span><small class="ml-1x">Python</small></a></h3>
+        <div>本人毕业于四川文理学院。目前从事网络爬虫，Android逆向方面工作，也热衷于算法与数据分析。</div>
+      </div>
+    </figure>
+  </div>
+</div>
+
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+      
+      <div id="vcomment" class="comment"></div> 
+      <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+      <script src="//unpkg.com/valine/dist/Valine.min.js"></script>
+      <script>
+         var notify = 'false' == true ? true : false;
+         var verify = 'false' == true ? true : false;
+          window.onload = function() {
+              new Valine({
+                  el: '.comment',
+                  notify: notify,
+                  verify: verify,
+                  app_id: "eMPxlnHK3gsE9VV9ehB05y5C-gzGzoHsz",
+                  app_key: "h5S0YSOKqe4rF8HMVfJqruw7",
+                  placeholder: "ヾﾉ≧∀≦)o来啊，快活啊!",
+                  avatar:"mm"
+              });
+          }
+      </script>
+      
+    
+  </section>
+
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    <li class="prev">
+      <a href="/2020/06/09/爬虫-scrapy/" title="爬虫-scrapy"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;Newer</span></a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/2020/06/09/爬虫-engine/" title="爬虫-engine"><span>Older&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+  </ul>
+  
+  
+  <!-- Button trigger modal -->
+  <button type="button" class="btn btn-fancy btn-donate pop-onhover bg-gradient-warning" data-toggle="modal" data-target="#donateModal"><span>$</span></button>
+  <!-- <div class="wave-icon wave-icon-danger btn-donate" data-toggle="modal" data-target="#donateModal">
+    <div class="wave-circle"><span class="icon"><i class="icon icon-bill"></i></span></div>
+  </div> -->
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,qq,wechat,facebook,twitter" data-mobile-sites="weibo,qq,qzone"></div>
+    
+  </div>
+  </div>
+</nav>
+  
+<!-- Modal -->
+<div class="modal modal-center modal-small modal-xs-full fade" id="donateModal" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content donate">
+      <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+      <div class="modal-body">
+        <div class="donate-box">
+          <div class="donate-head">
+            <p>Maybe you could buy me a cup of coffee.</p>
+          </div>
+          <div class="tab-content">
+            <div role="tabpanel" class="tab-pane fade active in" id="alipay">
+              <div class="donate-payimg">
+                <img src="/images/donate/alipayimg.png" alt="Scan Qrcode" title="Scan" />
+              </div>
+              <p class="text-muted mv">Scan this qrcode</p>
+              <p class="text-grey">Open alipay app scan this qrcode, buy me a coffee!</p>
+            </div>
+            <div role="tabpanel" class="tab-pane fade" id="wechatpay">
+              <div class="donate-payimg">
+                <img src="/images/donate/wechatpayimg.png" alt="Scan Qrcode" title="Scan" />
+              </div>
+              <p class="text-muted mv">Scan this qrcode</p>
+              <p class="text-grey">Open wechat app scan this qrcode, buy me a coffee!</p>
+            </div>
+          </div>
+          <div class="donate-footer">
+            <ul class="nav nav-tabs nav-justified" role="tablist">
+              <li role="presentation" class="active">
+                <a href="#alipay" id="alipay-tab" role="tab" data-toggle="tab" aria-controls="alipay" aria-expanded="true"><i class="icon icon-alipay"></i> alipay</a>
+              </li>
+              <li role="presentation" class="">
+                <a href="#wechatpay" role="tab" id="wechatpay-tab" data-toggle="tab" aria-controls="wechatpay" aria-expanded="false"><i class="icon icon-wepay"></i> wechat payment</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/langgithub" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
+
+    <div class="copyright">
+    	
+        <div class="publishby">
+        	Theme by <a href="https://github.com/cofess" target="_blank"> cofess </a>base on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+        </div>
+    </div>
+</footer>
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+<script>
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+</script>
+<script src="/js/plugin.min.js"></script>
+<script src="/js/application.js"></script>
+
+    <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: 'Posts',
+            PAGES: 'Pages',
+            CATEGORIES: 'Categories',
+            TAGS: 'Tags',
+            UNTITLED: '(Untitled)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+<script src="/js/insight.js"></script>
+
+
+
+
+
+   
+
+
+<!-- custom analytics part create by xiamo -->
+<script defer src="https://cdn1.lncld.net/static/js/av-min-1.2.1.js"></script>
+<script defer>
+AV.init({
+  appId: 'eMPxlnHK3gsE9VV9ehB05y5C-gzGzoHsz',
+  appKey: 'h5S0YSOKqe4rF8HMVfJqruw7'
+});
+
+function showTime(Counter) {
+	var query = new AV.Query(Counter);
+		var visitors= $('.leancloud_visitors');
+		query.greaterThanOrEqualTo("time", 0);		
+		query.find({
+			success: function(results) {
+				if (results.length == 0) {				
+					return;
+				}
+				var data = results;
+				visitors.each(function(){
+					var url = $(this).attr('id').trim();					
+					for (var i = 0; i < data.length; i++) {
+						var object = data[i];
+						var content = object.get('time');
+						var _url = object.get('url')
+						if(url == _url){
+							$(this).text(content);
+						}
+					}
+				})
+				
+			},
+			error: function(object, error) {
+				console.log("Error: " + error.code + " " + error.message);
+			}
+		});
+}
+
+function addCount(Counter) {
+	var Counter = AV.Object.extend("Counter");
+	url = $(".leancloud_visitors").attr('id').trim();
+	title = $(".leancloud_visitors").attr('data-flag-title').trim();
+	var query = new AV.Query(Counter);
+	query.equalTo("url", url);
+	query.find({
+		success: function(results) {
+			if (results.length > 0) {
+				var counter = results[0];
+				counter.fetchWhenSave(true);
+				counter.increment("time");
+				counter.save(null, {
+					success: function(counter) {
+						var content = counter.get('time');
+						$(document.getElementById(url)).text(content);
+					},
+					error: function(counter, error) {
+						console.log('Failed to save Visitor num, with error message: ' + error.message);
+					}
+				});
+			} else {
+				var newcounter = new Counter();
+				newcounter.set("title", title);
+				newcounter.set("url", url);
+				newcounter.set("time", 1);
+				newcounter.save(null, {
+					success: function(newcounter) {
+					    console.log("newcounter.get('time')="+newcounter.get('time'));
+						var content = newcounter.get('time');
+						$(document.getElementById(url)).text(content);
+					},
+					error: function(newcounter, error) {
+						console.log('Failed to create');
+					}
+				});
+			}
+		},
+		error: function(error) {
+			console.log('Error:' + error.code + " " + error.message);
+		}
+	});
+}
+$(function() {
+	var Counter = AV.Object.extend("Counter");
+	if ($('.leancloud_visitors').length == 1) {
+		addCount(Counter);
+	} else {
+		showTime(Counter);
+	}
+}); 
+</script>
+
+
+
+   
+    
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/valine"></script>
+  <script type="text/javascript">
+  var GUEST = ['nick', 'mail', 'link'];
+  var meta = 'nick,mail,link';
+  meta = meta.split(',').filter(function(item) {
+    return GUEST.indexOf(item) > -1;
+  });
+  new Valine({
+    el: '#vcomments',
+    verify: false,
+    notify: false,
+    appId: '',
+    appKey: '',
+    placeholder: 'Just go go',
+    avatar: 'mm',
+    meta: meta,
+    pageSize: '10' || 10,
+    visitor: false
+  });
+  </script>
+
+     
+
+
+
+
+
+
+
+</body>
+</html>

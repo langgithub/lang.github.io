@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform">
+  <meta http-equiv="Cache-Control" content="no-siteapp">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000">
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top">
+  
+  
+  <title>Android源码(4)-应用程序安装流程 | Hexo</title>
+  <meta name="description" content="一. 安装流程图 从上图我们可以看到apk安装到最后都会调用到这个flow：1PMS.scanPackageTracedLI=&amp;gt;PMS.scanPackageLI=&amp;gt;PMS.scanPackageDirtyLI 二. APK文件结构APK(Android Package)，可以看做是一个zip压缩包，可以通过解压缩工具解开，其文件结构如下：    目录 or 文件 描述     ass">
+<meta name="keywords" content="Activity,Android源码">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Android源码(4)-应用程序安装流程">
+<meta property="og:url" content="https://langgithub.github.io/2020/06/09/Android源码(4)-应用程序安装流程/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="一. 安装流程图 从上图我们可以看到apk安装到最后都会调用到这个flow：1PMS.scanPackageTracedLI=&amp;gt;PMS.scanPackageLI=&amp;gt;PMS.scanPackageDirtyLI 二. APK文件结构APK(Android Package)，可以看做是一个zip压缩包，可以通过解压缩工具解开，其文件结构如下：    目录 or 文件 描述     ass">
+<meta property="og:locale" content="default">
+<meta property="og:image" content="https://langgithub.github.io/img/pms_install.png">
+<meta property="og:updated_time" content="2020-06-09T09:29:21.364Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Android源码(4)-应用程序安装流程">
+<meta name="twitter:description" content="一. 安装流程图 从上图我们可以看到apk安装到最后都会调用到这个flow：1PMS.scanPackageTracedLI=&amp;gt;PMS.scanPackageLI=&amp;gt;PMS.scanPackageDirtyLI 二. APK文件结构APK(Android Package)，可以看做是一个zip压缩包，可以通过解压缩工具解开，其文件结构如下：    目录 or 文件 描述     ass">
+<meta name="twitter:image" content="https://langgithub.github.io/img/pms_install.png">
+  <!-- Canonical links -->
+  <link rel="canonical" href="https://langgithub.github.io/2020/06/09/Android源码(4)-应用程序安装流程/index.html">
+  
+    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  <link rel="stylesheet" href="/css/style.css">
+  
+  
+  
+  
+</head>
+
+
+<body class="main-center" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="https://github.com/langgithub" target="_blank">
+          <img class="img-circle img-rotate" src="/images/avatar.jpg" width="200" height="200">
+        </a>
+        <h2 id="name" class="hidden-xs hidden-sm">yuanlang</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md">Python</h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Beijing, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
+
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="Search" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="Type something..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+    </div>
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
+</div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav ">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">Home</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">Archives</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">Categories</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">Tags</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-repository">
+          <a href="/repository">
+            
+            <i class="icon icon-project"></i>
+            
+            <span class="menu-title">Repository</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-books">
+          <a href="/books">
+            
+            <i class="icon icon-book-fill"></i>
+            
+            <span class="menu-title">Books</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-links">
+          <a href="/links">
+            
+            <i class="icon icon-friendship"></i>
+            
+            <span class="menu-title">Links</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">About</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/langgithub" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
+
+    </nav>
+  </div>
+</header>
+
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    
+      <div class="widget">
+    <h3 class="widget-title">Board</h3>
+    <div class="widget-body">
+        <div id="board">
+            <div class="content">
+                qq群号：906761431 </br> <img src="/img/WechatIMG156.png"/>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget-body">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">9</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/code-Android/">code-Android</a><span class="category-list-count">14</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/code-c/">code-c++</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/code-go/">code-go</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/code-ios/">code-ios</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/code-java/">code-java</a><span class="category-list-count">8</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/code-javascript/">code-javascript</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/code-python/">code-python</a><span class="category-list-count">18</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/区块链/">区块链</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/数据存储-bigdata/">数据存储-bigdata</a><span class="category-list-count">7</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/数据存储-mongodb/">数据存储-mongodb</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/数据存储-mysql/">数据存储-mysql</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/爬虫-Android逆向/">爬虫-Android逆向</a><span class="category-list-count">24</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/爬虫-js逆向/">爬虫-js逆向</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/爬虫-玄学/">爬虫-玄学</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/算法-NLP/">算法-NLP</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/算法-数据结构/">算法-数据结构</a><span class="category-list-count">7</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/算法-机器学习/">算法-机器学习</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/辅助工具/">辅助工具</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/面试/">面试</a><span class="category-list-count">12</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget-body">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/7z/">7z</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ARM/">ARM</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Activity/">Activity</a><span class="tag-list-count">8</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Ajax/">Ajax</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android/">Android</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android刷机/">Android刷机</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android加固/">Android加固</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android源码/">Android源码</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android签名/">Android签名</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android逆向/">Android逆向</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/IDA/">IDA</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Linux/">Linux</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/NLP/">NLP</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/WSGI/">WSGI</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/YouCompleteMe/">YouCompleteMe</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/c/">c++</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/frida/">frida</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/git/">git</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/go/">go</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/hadoop/">hadoop</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/hexo/">hexo</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/hook/">hook</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/http/">http</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/https/">https</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ios开发/">ios开发</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/java/">java</a><span class="tag-list-count">8</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/javascript/">javascript</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/jvm/">jvm</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/linux/">linux</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/linux操作系统/">linux操作系统</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/maven/">maven</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mongodb/">mongodb</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mysql/">mysql</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ndk/">ndk</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/netty/">netty</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ptrace/">ptrace</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/python/">python</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/python源码阅读/">python源码阅读</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/so/">so</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/sublime-text3/">sublime text3</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/tar/">tar</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/vim/">vim</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/xposed/">xposed</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/zip/">zip</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/区块链/">区块链</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/手机群控/">手机群控</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/操作系统/">操作系统</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/数据库/">数据库</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/数据结构/">数据结构</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/文件结构/">文件结构</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/机器学习/">机器学习</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/案例/">案例</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/滑块验证码/">滑块验证码</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/爬虫/">爬虫</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/简单图形验证码/">简单图形验证码</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/算法/">算法</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/线性代数/">线性代数</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/统计/">统计</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/脱壳/">脱壳</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/自动化/">自动化</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/计算机网络原理/">计算机网络原理</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/锁/">锁</a><span class="tag-list-count">1</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget-body tagcloud">
+      <a href="/tags/7z/" style="font-size: 13px;">7z</a> <a href="/tags/ARM/" style="font-size: 13px;">ARM</a> <a href="/tags/Activity/" style="font-size: 13.6px;">Activity</a> <a href="/tags/Ajax/" style="font-size: 13px;">Ajax</a> <a href="/tags/Android/" style="font-size: 13px;">Android</a> <a href="/tags/Android刷机/" style="font-size: 13.1px;">Android刷机</a> <a href="/tags/Android加固/" style="font-size: 13px;">Android加固</a> <a href="/tags/Android源码/" style="font-size: 13.9px;">Android源码</a> <a href="/tags/Android签名/" style="font-size: 13px;">Android签名</a> <a href="/tags/Android逆向/" style="font-size: 13.1px;">Android逆向</a> <a href="/tags/IDA/" style="font-size: 13px;">IDA</a> <a href="/tags/Linux/" style="font-size: 13.7px;">Linux</a> <a href="/tags/NLP/" style="font-size: 13.3px;">NLP</a> <a href="/tags/WSGI/" style="font-size: 13px;">WSGI</a> <a href="/tags/YouCompleteMe/" style="font-size: 13px;">YouCompleteMe</a> <a href="/tags/c/" style="font-size: 13px;">c++</a> <a href="/tags/frida/" style="font-size: 13px;">frida</a> <a href="/tags/git/" style="font-size: 13px;">git</a> <a href="/tags/go/" style="font-size: 13px;">go</a> <a href="/tags/hadoop/" style="font-size: 13.5px;">hadoop</a> <a href="/tags/hexo/" style="font-size: 13px;">hexo</a> <a href="/tags/hook/" style="font-size: 13px;">hook</a> <a href="/tags/http/" style="font-size: 13.1px;">http</a> <a href="/tags/https/" style="font-size: 13px;">https</a> <a href="/tags/ios开发/" style="font-size: 13px;">ios开发</a> <a href="/tags/java/" style="font-size: 13.6px;">java</a> <a href="/tags/javascript/" style="font-size: 13px;">javascript</a> <a href="/tags/jvm/" style="font-size: 13px;">jvm</a> <a href="/tags/linux/" style="font-size: 13.1px;">linux</a> <a href="/tags/linux操作系统/" style="font-size: 13px;">linux操作系统</a> <a href="/tags/maven/" style="font-size: 13px;">maven</a> <a href="/tags/mongodb/" style="font-size: 13px;">mongodb</a> <a href="/tags/mysql/" style="font-size: 13.3px;">mysql</a> <a href="/tags/ndk/" style="font-size: 13.1px;">ndk</a> <a href="/tags/netty/" style="font-size: 13.1px;">netty</a> <a href="/tags/ptrace/" style="font-size: 13.2px;">ptrace</a> <a href="/tags/python/" style="font-size: 13.8px;">python</a> <a href="/tags/python源码阅读/" style="font-size: 13.5px;">python源码阅读</a> <a href="/tags/so/" style="font-size: 14px;">so</a> <a href="/tags/sublime-text3/" style="font-size: 13px;">sublime text3</a> <a href="/tags/tar/" style="font-size: 13px;">tar</a> <a href="/tags/vim/" style="font-size: 13px;">vim</a> <a href="/tags/xposed/" style="font-size: 13.1px;">xposed</a> <a href="/tags/zip/" style="font-size: 13px;">zip</a> <a href="/tags/区块链/" style="font-size: 13.2px;">区块链</a> <a href="/tags/手机群控/" style="font-size: 13px;">手机群控</a> <a href="/tags/操作系统/" style="font-size: 13px;">操作系统</a> <a href="/tags/数据库/" style="font-size: 13px;">数据库</a> <a href="/tags/数据结构/" style="font-size: 13.5px;">数据结构</a> <a href="/tags/文件结构/" style="font-size: 13px;">文件结构</a> <a href="/tags/机器学习/" style="font-size: 13.2px;">机器学习</a> <a href="/tags/案例/" style="font-size: 13px;">案例</a> <a href="/tags/滑块验证码/" style="font-size: 13px;">滑块验证码</a> <a href="/tags/爬虫/" style="font-size: 13px;">爬虫</a> <a href="/tags/简单图形验证码/" style="font-size: 13.1px;">简单图形验证码</a> <a href="/tags/算法/" style="font-size: 13.4px;">算法</a> <a href="/tags/线性代数/" style="font-size: 13px;">线性代数</a> <a href="/tags/统计/" style="font-size: 13px;">统计</a> <a href="/tags/脱壳/" style="font-size: 13.5px;">脱壳</a> <a href="/tags/自动化/" style="font-size: 13.1px;">自动化</a> <a href="/tags/计算机网络原理/" style="font-size: 13px;">计算机网络原理</a> <a href="/tags/锁/" style="font-size: 13px;">锁</a>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Archive</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/06/">June 2020</a><span class="archive-list-count">135</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/面试/">面试</a>
+              </p>
+              <p class="item-title">
+                <a href="/2020/06/09/链表相关题/" class="title">链表相关题</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2020-06-09T09:29:21.397Z" itemprop="datePublished">2020-06-09</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/算法-数据结构/">算法-数据结构</a>
+              </p>
+              <p class="item-title">
+                <a href="/2020/06/09/递归算法/" class="title">递归算法</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2020-06-09T09:29:21.396Z" itemprop="datePublished">2020-06-09</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/算法-数据结构/">算法-数据结构</a>
+              </p>
+              <p class="item-title">
+                <a href="/2020/06/09/贪心算法/" class="title">贪心算法</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2020-06-09T09:29:21.396Z" itemprop="datePublished">2020-06-09</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/面试/">面试</a>
+              </p>
+              <p class="item-title">
+                <a href="/2020/06/09/计算机网络原理/" class="title">计算机网络原理</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2020-06-09T09:29:21.396Z" itemprop="datePublished">2020-06-09</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/爬虫-Android逆向/">爬虫-Android逆向</a>
+              </p>
+              <p class="item-title">
+                <a href="/2020/06/09/逆向-ARM指令/" class="title">逆向-ARM指令</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2020-06-09T09:29:21.396Z" itemprop="datePublished">2020-06-09</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-Android源码(4)-应用程序安装流程" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Android源码(4)-应用程序安装流程
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/2020/06/09/Android源码(4)-应用程序安装流程/" class="article-date">
+	  <time datetime="2020-06-09T09:29:21.364Z" itemprop="datePublished">2020-06-09</time>
+	</a>
+</span>
+        
+  <span class="article-category">
+    <i class="icon icon-folder"></i>
+    <a class="article-category-link" href="/categories/code-Android/">code-Android</a>
+  </span>
+
+        
+  <span class="article-tag">
+    <i class="icon icon-tags"></i>
+	<a class="article-tag-link" href="/tags/Activity/">Activity</a>, <a class="article-tag-link" href="/tags/Android源码/">Android源码</a>
+  </span>
+
+
+        
+
+	<span class="article-read hidden-xs">
+    	<i class="icon icon-eye-fill" aria-hidden="true"></i>
+    	<span id="/2020/06/09/Android源码(4)-应用程序安装流程/" class="leancloud_visitors"  data-flag-title="Android源码(4)-应用程序安装流程">0</span>
+    </span>
+
+
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/2020/06/09/Android源码(4)-应用程序安装流程/#comments" class="article-comment-link">Comments</a></span>
+        
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <h1 id="一-安装流程图"><a href="#一-安装流程图" class="headerlink" title="一. 安装流程图"></a>一. 安装流程图</h1><p><img src="/img/pms_install.png" alt="pms-install"></p>
+<p>从上图我们可以看到apk安装到最后都会调用到这个flow：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">PMS.scanPackageTracedLI=&gt;PMS.scanPackageLI=&gt;PMS.scanPackageDirtyLI</span><br></pre></td></tr></table></figure></p>
+<h1 id="二-APK文件结构"><a href="#二-APK文件结构" class="headerlink" title="二. APK文件结构"></a>二. APK文件结构</h1><p>APK(Android Package)，可以看做是一个zip压缩包，可以通过解压缩工具解开，其文件结构如下：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">目录 or 文件</th>
+<th style="text-align:center">描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">assert</td>
+<td style="text-align:center">存放的原生资源文件,通过AssetManager类访问</td>
+</tr>
+<tr>
+<td style="text-align:center">lib</td>
+<td style="text-align:center">native库文件</td>
+</tr>
+<tr>
+<td style="text-align:center">META - INF</td>
+<td style="text-align:center">存放签名信息，用来保证APK包的完整性和系统的安全。系统安装APK时，应用管理器会按照对应算法对包里文件做校验，<br>如果校验结果与META-INF中内容不一致，则不会安装这个APK。</td>
+</tr>
+<tr>
+<td style="text-align:center">res</td>
+<td style="text-align:center">种资源文件系统会在R.java里面自动生成该资源文件的ID，所以访问这种资源文件比较简单，通过R.XXX.ID即可</td>
+</tr>
+<tr>
+<td style="text-align:center">AndroidManifest.xml</td>
+<td style="text-align:center">每个应用都必须定义和包含，描述应用的名字、版本权限、引用的库文件等信息。apk中的AndroidManifest.xml经过压缩，<br>可以通过AXMLPrinter2工具解开。</td>
+</tr>
+<tr>
+<td style="text-align:center">classes.dex</td>
+<td style="text-align:center">是JAVA源码编译后生成的JAVA字节码文件。但Android使用的dalvik虚拟机与标准的JAVA虚拟机不兼容，<br>dex文件与class文件相比，不论是文件结构还是opcode都不一样。</td>
+</tr>
+<tr>
+<td style="text-align:center">resources.arsc</td>
+<td style="text-align:center">编译后的二进制资源文件。</td>
+</tr>
+</tbody>
+</table>
+<h1 id="三-apk安装方法"><a href="#三-apk安装方法" class="headerlink" title="三. apk安装方法"></a>三. apk安装方法</h1><p>apk有下面4种安装方法：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">方法</th>
+<th style="text-align:center">描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">开机过程中安装</td>
+<td style="text-align:center">开机时完成，没有安装界面，如系统应用、其它预置应用</td>
+</tr>
+<tr>
+<td style="text-align:center">adb工具安装</td>
+<td style="text-align:center">没有安装界面，adb install/push xxxx.apk</td>
+</tr>
+<tr>
+<td style="text-align:center">第三方应用安装</td>
+<td style="text-align:center">通过packageinstaller.apk进行安装，有安装界面，如打开文件管理器并点击sdk卡里APK文件</td>
+</tr>
+<tr>
+<td style="text-align:center">网络下载应用安装</td>
+<td style="text-align:center">通过google market应用完成，没有安装界面</td>
+</tr>
+</tbody>
+</table>
+<p>简单说明下apk安装的基本过程：</p>
+<p>拷贝目标apk到指定文件目录<br>调用scanPackageLI为apk文件在系统中注册信息</p>
+<h1 id="四-引用程序安装过程"><a href="#四-引用程序安装过程" class="headerlink" title="四.引用程序安装过程"></a>四.引用程序安装过程</h1><p>上述几种安装方法最终都通过PackageManagerService.scanPackageLI完成，总结起来大致有以下三种方式：</p>
+<ul>
+<li>adb push：<br>PackageManagerService的内部类AppDirObserver实现了监听app目录的功能，当把某个APK文件放到app目录下面时，PMS会收到ADD_EVENTS事件<br>frameworks\base\services\java\com\android\server\pm\PackageManagerService.java</li>
+<li>adb install：<br>安装入口函数为Pm.runInstall<br>frameworks\base\cmds\pm\src\com\android\commands\pm\Pm.java</li>
+<li>网络下载应用安装和第三方应用安装：<br>安装入口函数为ApplicationPackageManager.installPackage<br>frameworks\base\core\java\android\app\ApplicationPackageManager.java</li>
+</ul>
+<h1 id="五、adb-push"><a href="#五、adb-push" class="headerlink" title="五、adb push"></a>五、adb push</h1><p>Android 4.4平台，PackageManagerService的内部类AppDirObserver实现了监听app目录的功能，当把某个APK文件放到app目录下面时，PMS会收到ADD_EVENTS事件。<br>如果是添加事件，则调用scanPackageLI，并使用updatePermissionsLPw授权；如果是删除事件则调用removePackageLI移除该apk的相关信息。最后都要调用writeLPr重新保存相关信息到packages.xml。</p>
+<p>关于AppDirObserver具体如何监听的，可以查看：AppDirObserver</p>
+<p>不过我在android 7.0 sdk里面没有看到这个类，难道7.0把这个功能砍了？手头没有7.0平台，不好验证。</p>
+<p>我猜测现在通过adb push apk到data/app或者system/app的apk，如果这个监听的功能砍了，那么应该是会通过reboot重启系统，走PMS.main流程，scanDir–&gt;scanPackageLI去安装apk。</p>
+<p>以上待填坑。</p>
+<h1 id="六、adb-install"><a href="#六、adb-install" class="headerlink" title="六、adb install"></a>六、adb install</h1><p>adb install 的安装方式，会调用system/core/adb/commandline.cpp中的adb_commandline函数：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">adb_commandline</span><br><span class="line">    install_app_legacy or install_app </span><br><span class="line">        pm_command</span><br><span class="line">            send_shell_command</span><br><span class="line">                Pm.runInstall()</span><br></pre></td></tr></table></figure></p>
+<p>这个过程会把apk文件copy到data/local/tmp/目录下，然后向shell服务发送pm命令安装apk，最后调用Pm.runInstall()方法来安装apk。</p>
+<p>6.1 pm.runInstall<br>frameworks\base\cmds\pm\src\com\android\commands\pm\Pm.java<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line">private int runInstall() throws RemoteException &#123;</span><br><span class="line">    final InstallParams params = makeInstallParams();</span><br><span class="line">    // 1. 创建session</span><br><span class="line">    final int sessionId = doCreateSession(params.sessionParams,</span><br><span class="line">            params.installerPackageName, params.userId);</span><br><span class="line">    try &#123;</span><br><span class="line">        final String inPath = nextArg();</span><br><span class="line">        if (inPath == null &amp;&amp; params.sessionParams.sizeBytes == 0) &#123;</span><br><span class="line">            System.err.println(&quot;Error: must either specify a package size or an APK file&quot;);</span><br><span class="line">            return 1;</span><br><span class="line">        &#125;</span><br><span class="line">        // 2. 写session</span><br><span class="line">        if (doWriteSession(sessionId, inPath, params.sessionParams.sizeBytes, &quot;base.apk&quot;,</span><br><span class="line">                false /*logSuccess*/) != PackageInstaller.STATUS_SUCCESS) &#123;</span><br><span class="line">            return 1;</span><br><span class="line">        &#125;</span><br><span class="line">        // 3. 提交Session</span><br><span class="line">        if (doCommitSession(sessionId, false /*logSuccess*/)</span><br><span class="line">                != PackageInstaller.STATUS_SUCCESS) &#123;</span><br><span class="line">            return 1;</span><br><span class="line">        &#125;</span><br><span class="line">        System.out.println(&quot;Success&quot;);</span><br><span class="line">        return 0;</span><br><span class="line">    &#125; finally &#123;</span><br><span class="line">        try &#123;</span><br><span class="line">            mInstaller.abandonSession(sessionId);</span><br><span class="line">        &#125; catch (Exception ignore) &#123;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>从上面的代码来看，runInstall主要进行了三件事，即创建session、对session进行写操作，最后提交session。</p>
+<p>6.1.1 doCreateSession<br>实际调用的是PackageInstallerService的createSession，这个过程主要是为APK安装做好准备工作，例如权限检查、目的临时文件的创建等， 最终创建出PackageInstallerSession对象。PackageInstallerSession可以看做是”安装APK”这个请求的封装，其中包含了处理这个请求需要的一些信息。<br>实际上PackageInstallerSession不仅是分装请求的对象，其自身还是个服务端。</p>
+<p>6.1.2 doWriteSession<br>通过PackageInstallerSession将/data/local/tmp的apk拷贝到终端目录内。</p>
+<p>6.1.3 doCommitSession<br>doWriteSession结束后，如果没有出现任何错误，那么APK源文件已经copy到目的地址了，doCommitSession最终会调用到PMS.installStage来安装apk，调用流程如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">PackageInstallerSession.commit ==&gt; commitLocked(); ==&gt; PMS.installStage()</span><br></pre></td></tr></table></figure>
+<p>PMS.installStage()会调用sendMessage将”INIT_COPY”发送给PackageHandler：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line">void installStage(String packageName, File stagedDir, String stagedCid,</span><br><span class="line">        IPackageInstallObserver2 observer, PackageInstaller.SessionParams sessionParams,</span><br><span class="line">        String installerPackageName, int installerUid, UserHandle user,</span><br><span class="line">        Certificate[][] certificates) &#123;</span><br><span class="line">    if (DEBUG_EPHEMERAL) &#123;</span><br><span class="line">        if ((sessionParams.installFlags &amp; PackageManager.INSTALL_EPHEMERAL) != 0) &#123;</span><br><span class="line">            Slog.d(TAG, &quot;Ephemeral install of &quot; + packageName);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    final VerificationInfo verificationInfo = new VerificationInfo(</span><br><span class="line">            sessionParams.originatingUri, sessionParams.referrerUri,</span><br><span class="line">            sessionParams.originatingUid, installerUid);</span><br><span class="line">    final OriginInfo origin;</span><br><span class="line">    if (stagedDir != null) &#123;</span><br><span class="line">        origin = OriginInfo.fromStagedFile(stagedDir);</span><br><span class="line">    &#125; else &#123;</span><br><span class="line">        origin = OriginInfo.fromStagedContainer(stagedCid);</span><br><span class="line">    &#125;</span><br><span class="line">    final Message msg = mHandler.obtainMessage(INIT_COPY);</span><br><span class="line">    final InstallParams params = new InstallParams(origin, null, observer,</span><br><span class="line">            sessionParams.installFlags, installerPackageName, sessionParams.volumeUuid,</span><br><span class="line">            verificationInfo, user, sessionParams.abiOverride,</span><br><span class="line">            sessionParams.grantedRuntimePermissions, certificates);</span><br><span class="line">    params.setTraceMethod(&quot;installStage&quot;).setTraceCookie(System.identityHashCode(params));</span><br><span class="line">    msg.obj = params;</span><br><span class="line">    Trace.asyncTraceBegin(TRACE_TAG_PACKAGE_MANAGER, &quot;installStage&quot;,</span><br><span class="line">            System.identityHashCode(msg.obj));</span><br><span class="line">    Trace.asyncTraceBegin(TRACE_TAG_PACKAGE_MANAGER, &quot;queueInstall&quot;,</span><br><span class="line">            System.identityHashCode(msg.obj));</span><br><span class="line">    mHandler.sendMessage(msg);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>PackageHandler用于处理apk的安装请求等消息，后面分析。</p>
+<h1 id="七、ApplicationPackageManager"><a href="#七、ApplicationPackageManager" class="headerlink" title="七、ApplicationPackageManager"></a>七、ApplicationPackageManager</h1><p>网络下载应用安装或者通过第三方应用安装，最终都会通过ApplicationPackageManager.installPackage来安装：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">public void installPackage(Uri packageURI, PackageInstallObserver observer,</span><br><span class="line">            int flags, String installerPackageName) &#123;</span><br><span class="line">        installCommon(packageURI, observer, flags, installerPackageName, mContext.getUserId());</span><br><span class="line">    &#125;</span><br><span class="line">private void installCommon(Uri packageURI,</span><br><span class="line">        PackageInstallObserver observer, int flags, String installerPackageName,</span><br><span class="line">        int userId) &#123;</span><br><span class="line">    if (!&quot;file&quot;.equals(packageURI.getScheme())) &#123;</span><br><span class="line">        throw new UnsupportedOperationException(&quot;Only file:// URIs are supported&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">    final String originPath = packageURI.getPath();</span><br><span class="line">    try &#123;</span><br><span class="line">        // PMS.installPackageAsUser</span><br><span class="line">        mPM.installPackageAsUser(originPath, observer.getBinder(), flags, installerPackageName,</span><br><span class="line">            userId);</span><br><span class="line">    &#125; catch (RemoteException e) &#123;</span><br><span class="line">        throw e.rethrowFromSystemServer();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>PMS.installPackageAsUser调用sendMessage将”INIT_COPY”发送给PackageHandler:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">@Override</span><br><span class="line">public void installPackageAsUser(String originPath, IPackageInstallObserver2 observer,</span><br><span class="line">        int installFlags, String installerPackageName, int userId) &#123;</span><br><span class="line">    ...</span><br><span class="line">    final Message msg = mHandler.obtainMessage(INIT_COPY);</span><br><span class="line">    final VerificationInfo verificationInfo = new VerificationInfo(</span><br><span class="line">            null /*originatingUri*/, null /*referrer*/, -1 /*originatingUid*/, callingUid);</span><br><span class="line">    final InstallParams params = new InstallParams(origin, null /*moveInfo*/, observer,</span><br><span class="line">            installFlags, installerPackageName, null /*volumeUuid*/, verificationInfo, user,</span><br><span class="line">            null /*packageAbiOverride*/, null /*grantedPermissions*/,</span><br><span class="line">            null /*certificates*/);</span><br><span class="line">    params.setTraceMethod(&quot;installAsUser&quot;).setTraceCookie(System.identityHashCode(params));</span><br><span class="line">    msg.obj = params;</span><br><span class="line">    mHandler.sendMessage(msg);</span><br><span class="line">    ....</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>PackageHandler用于处理apk的安装请求等消息，后面分析。</p>
+<h1 id="八、PackageHanlder"><a href="#八、PackageHanlder" class="headerlink" title="八、PackageHanlder"></a>八、PackageHanlder</h1><ul>
+<li>PMS.installStage()会调用sendMessage将”INIT_COPY”发送给PackageHandler</li>
+<li>PMS.installPackageAsUser调用sendMessage将”INIT_COPY”发送给PackageHandler</li>
+</ul>
+<p>8.1 INIT_COPY<br>PackageHandler用于处理apk的安装请求等消息，在PMS构造函数中有初始化。实际处理消息的函数为doHandleMessage，我们来看看INIT_COPY的处理流程：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line">class PackageHandler extends Handler &#123;</span><br><span class="line">    ...</span><br><span class="line">    void doHandleMessage(Message msg) &#123;</span><br><span class="line">        switch (msg.what) &#123;</span><br><span class="line">            case INIT_COPY: &#123;</span><br><span class="line">                //这里取出的其实就是InstallParams</span><br><span class="line">                HandlerParams params = (HandlerParams) msg.obj;</span><br><span class="line">                //idx为当前等待处理处理的安装请求的个数</span><br><span class="line">                int idx = mPendingInstalls.size();</span><br><span class="line">                ............</span><br><span class="line">                //初始时，mBound的值为false</span><br><span class="line">                if (!mBound) &#123;</span><br><span class="line">                    ............</span><br><span class="line">                    // If this is the only one pending we might</span><br><span class="line">                    // have to bind to the service again.</span><br><span class="line">                    //连接安装服务</span><br><span class="line">                    if (!connectToService()) &#123;</span><br><span class="line">                        ..................</span><br><span class="line">                    &#125; else &#123;</span><br><span class="line">                        // Once we bind to the service, the first</span><br><span class="line">                        // pending request will be processed.</span><br><span class="line">                        //绑定服务成功后，将新的请求加入到mPendingIntalls中，等待处理</span><br><span class="line">                        mPendingInstalls.add(idx, params);</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125; else &#123;</span><br><span class="line">                    //如果之前已经绑定过服务，同样将新的请求加入到mPendingIntalls中，等待处理</span><br><span class="line">                    mPendingInstalls.add(idx, params);</span><br><span class="line">                    // Already bound to the service. Just make</span><br><span class="line">                    // sure we trigger off processing the first request.</span><br><span class="line">                    if (idx == 0) &#123;</span><br><span class="line">                        //如果是第一个请求，则直接发送事件MCS_BOUND，触发处理流程</span><br><span class="line">                        mHandler.sendEmptyMessage(MCS_BOUND);</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">                break;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>INIT_COPY主要是将新的请求加入到mPendingIntalls中，等待MCS_BOUND阶段处理。</p>
+<p>8.2 MCS_BOUND<br>INIT_COPY最后会发送MCS_BOUND消息触发接下来的流程，MCS_BOUND对应的处理流程同样定义于doHandleMessage中：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br></pre></td><td class="code"><pre><span class="line">void doHandleMessage(Message msg) &#123;</span><br><span class="line">    .......</span><br><span class="line">    case MCS_BOUND: &#123;</span><br><span class="line">        ........</span><br><span class="line">        if (msg.obj != null) &#123;</span><br><span class="line">            mContainerService = (IMediaContainerService) msg.obj;</span><br><span class="line">            .......</span><br><span class="line">        &#125;</span><br><span class="line">        if (mContainerService == null) &#123;</span><br><span class="line">            if (!mBound) &#123;</span><br><span class="line">                // Something seriously wrong since we are not bound and we are not</span><br><span class="line">                // waiting for connection. Bail out.</span><br><span class="line">                ............            </span><br><span class="line">            &#125; else &#123;</span><br><span class="line">                Slog.w(TAG, &quot;Waiting to connect to media container service&quot;);</span><br><span class="line">            &#125;</span><br><span class="line">        // 请求队列mPendingInstalls不为空</span><br><span class="line">        &#125; else if (mPendingInstalls.size() &gt; 0) &#123;</span><br><span class="line">            HandlerParams params = mPendingInstalls.get(0);</span><br><span class="line">            if (params != null) &#123;</span><br><span class="line">                ........</span><br><span class="line">                //调用参数的startCopy函数处理安装请求</span><br><span class="line">                if (params.startCopy()) &#123;</span><br><span class="line">                    ........</span><br><span class="line">                    // Delete pending install</span><br><span class="line">                    if (mPendingInstalls.size() &gt; 0) &#123;</span><br><span class="line">                        mPendingInstalls.remove(0);</span><br><span class="line">                    &#125;</span><br><span class="line">                    if (mPendingInstalls.size() == 0) &#123;</span><br><span class="line">                        if (mBound) &#123;</span><br><span class="line">                            ..........</span><br><span class="line">                            removeMessages(MCS_UNBIND);</span><br><span class="line">                            Message ubmsg = obtainMessage(MCS_UNBIND);</span><br><span class="line">                            // Unbind after a little delay, to avoid</span><br><span class="line">                            // continual thrashing.</span><br><span class="line">                            sendMessageDelayed(ubmsg, 10000);</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125; else &#123;</span><br><span class="line">                        // There are more pending requests in queue.</span><br><span class="line">                        // Just post MCS_BOUND message to trigger processing</span><br><span class="line">                        // of next pending install.</span><br><span class="line">                        ......</span><br><span class="line">                        mHandler.sendEmptyMessage(MCS_BOUND);</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">                .........</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">            // Should never happen ideally.</span><br><span class="line">            Slog.w(TAG, &quot;Empty queue&quot;);</span><br><span class="line">        &#125;</span><br><span class="line">        break;</span><br><span class="line">    &#125;</span><br><span class="line">.......</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<ul>
+<li>如果mPendingInstalls不为空，调用InstallParams.startCopy函数处理安装请求。</li>
+<li>接着如果mPendingInstalls不为空，发送MCS_BOUND继续处理下一个，直到队列为空。</li>
+<li>如果队列为空，则等待一段时间后，发送MCS_UNBIND消息断开与安装服务的绑定。</li>
+</ul>
+<h1 id="九、startCopy"><a href="#九、startCopy" class="headerlink" title="九、startCopy"></a>九、startCopy</h1><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/frameworks/base/services/core/java/com/android/server/pm/PackageManagerService.java</span><br></pre></td></tr></table></figure>
+<p>InstallParams继承HandlerParams，实际调用的是HandlerParams.startCopy:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">final boolean startCopy() &#123;</span><br><span class="line">    boolean res;</span><br><span class="line">    try &#123;</span><br><span class="line">        if (DEBUG_INSTALL) Slog.i(TAG, &quot;startCopy &quot; + mUser + &quot;: &quot; + this);</span><br><span class="line">        if (++mRetries &gt; MAX_RETRIES) &#123;</span><br><span class="line">            Slog.w(TAG, &quot;Failed to invoke remote methods on default container service. Giving up&quot;);</span><br><span class="line">            mHandler.sendEmptyMessage(MCS_GIVE_UP);</span><br><span class="line">            handleServiceError();</span><br><span class="line">            return false;</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">            // 调用handleStartCopy()处理</span><br><span class="line">            handleStartCopy();</span><br><span class="line">            Slog.i(TAG, &quot;Apk copy done&quot;);</span><br><span class="line">            res = true;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; catch (RemoteException e) &#123;</span><br><span class="line">        if (DEBUG_INSTALL) Slog.i(TAG, &quot;Posting install MCS_RECONNECT&quot;);</span><br><span class="line">        mHandler.sendEmptyMessage(MCS_RECONNECT);</span><br><span class="line">        res = false;</span><br><span class="line">    &#125;</span><br><span class="line">    // </span><br><span class="line">    handleReturnCode();</span><br><span class="line">    return res;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>PMS将先后调用handleStartCopy和handleReturnCode来完成主要的工作。</p>
+<p>9.1 handleStartCopy<br>handleStartCopy函数在HandleParams抽象类定义，在其子类InstallParams来实现，我们看看与实际安装相关的handleStartCopy函数：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line">ublic void handleStartCopy() throws RemoteException &#123;</span><br><span class="line">    int ret = PackageManager.INSTALL_SUCCEEDED;</span><br><span class="line">    // 决定是安装在手机内还是sdcard中，设置对应标志位</span><br><span class="line">    if (origin.staged) &#123;</span><br><span class="line">        if (origin.file != null) &#123;</span><br><span class="line">            installFlags |= PackageManager.INSTALL_INTERNAL;</span><br><span class="line">            installFlags &amp;= ~PackageManager.INSTALL_EXTERNAL;</span><br><span class="line">        &#125; else if (origin.cid != null) &#123;</span><br><span class="line">            installFlags |= PackageManager.INSTALL_EXTERNAL;</span><br><span class="line">            installFlags &amp;= ~PackageManager.INSTALL_INTERNAL;</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">            throw new IllegalStateException(&quot;Invalid stage location&quot;);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">    // 检查APK的安装位置是否正确</span><br><span class="line">    if (onInt &amp;&amp; onSd) &#123;</span><br><span class="line">        // Check if both bits are set.</span><br><span class="line">        Slog.w(TAG, &quot;Conflicting flags specified for installing on both internal and external&quot;);</span><br><span class="line">        ret = PackageManager.INSTALL_FAILED_INVALID_INSTALL_LOCATION;</span><br><span class="line">    &#125; else if (onSd &amp;&amp; ephemeral) &#123;</span><br><span class="line">        Slog.w(TAG,  &quot;Conflicting flags specified for installing ephemeral on external&quot;);</span><br><span class="line">        ret = PackageManager.INSTALL_FAILED_INVALID_INSTALL_LOCATION;</span><br><span class="line">    &#125; else &#123;</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">    // createInstallArgs用于创建一个安装参数对象</span><br><span class="line">    final InstallArgs args = createInstallArgs(this);</span><br><span class="line">    </span><br><span class="line">    if (ret == PackageManager.INSTALL_SUCCEEDED) &#123;</span><br><span class="line">        ...</span><br><span class="line">            // 调用InstallArgs的copyApk函数</span><br><span class="line">            ret = args.copyApk(mContainerService, true);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    mRet = ret;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>InstallParams$handleStartCopy()主要功能是获取安装位置信息以及复制apk到指定位置。抽象类InstallArgs中的copyApk负责复制APK文件，具体实现在子类FileInstallArgs和SdInstallArgs里面。</p>
+<p>9.2 handleReturnCode<br>InstallParams$handleReturnCode()中，调用processPendingInstall方法处理安装：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">void handleReturnCode() &#123;</span><br><span class="line">    // If mArgs is null, then MCS couldn&apos;t be reached. When it</span><br><span class="line">    // reconnects, it will try again to install. At that point, this</span><br><span class="line">    // will succeed.</span><br><span class="line">    if (mArgs != null) &#123;</span><br><span class="line">        processPendingInstall(mArgs, mRet);</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure></p>
+<p>9.3 processPendingInstall<br>主要的安装流程都在这个方法里面: PMS.processPendingInstall<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line">private void processPendingInstall(final InstallArgs args, final int currentStatus) &#123;</span><br><span class="line">    mHandler.post(new Runnable() &#123;</span><br><span class="line">        public void run() &#123;</span><br><span class="line">            mHandler.removeCallbacks(this);</span><br><span class="line">            // Result object to be returned</span><br><span class="line">            PackageInstalledInfo res = new PackageInstalledInfo();</span><br><span class="line">            res.setReturnCode(currentStatus);</span><br><span class="line">            res.uid = -1;</span><br><span class="line">            res.pkg = null;</span><br><span class="line">            res.removedInfo = null;</span><br><span class="line">            if (res.returnCode == PackageManager.INSTALL_SUCCEEDED) &#123;</span><br><span class="line">                //1、预安装，检查包状态，确保环境ok，如果环境不ok，那么会清理拷贝的文件</span><br><span class="line">                args.doPreInstall(res.returnCode);</span><br><span class="line">                synchronized (mInstallLock) &#123;</span><br><span class="line">                    //2、安装，调用installPackageTracedLI进行安装</span><br><span class="line">                    installPackageTracedLI(args, res);</span><br><span class="line">                &#125;</span><br><span class="line">                //3、安装收尾</span><br><span class="line">                args.doPostInstall(res.returnCode, res.uid);</span><br><span class="line">            &#125;</span><br><span class="line">            </span><br><span class="line">            if (!doRestore) &#123;</span><br><span class="line">                .......</span><br><span class="line">                //4、生成一个POST_INSTALL消息给PackageHanlder</span><br><span class="line">                Message msg = mHandler.obtainMessage(POST_INSTALL, token, 0);</span><br><span class="line">                mHandler.sendMessage(msg);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>安装过程放在一个线程里面，处理流程是预安装-安装-安装收尾-发送 POST_INSTALL消息：</p>
+<ul>
+<li>预安装：检查当前安装包的状态以及确保SDCARD的挂载，并返回状态信息。在安装前确保安装环境的可靠。</li>
+<li>安装：对mInstallLock加锁，表明同时只能有一个安装包进行安装；然后调用installPackageTracedLI完成具体安装操作。</li>
+<li>安装收尾： 检查状态，如果安装不成功，删除掉相关目录文件。</li>
+<li>发送POST_INSTALL消息：该消息由PackageHandler接收。POST_INSTALL的主要工作其实还是通过广播、回调接口通知系统中的其它组件，有新的Pacakge安装或发生了改变。</li>
+</ul>
+<p>从上面我们可以知道，具体安装apk的函数是PMS.installPackageTracedLI。</p>
+<p>十、installPackageTracedLI<br>PMS.installPackageTracedLI函数：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">private void installPackageTracedLI(InstallArgs args, PackageInstalledInfo res) &#123;</span><br><span class="line">    try &#123;</span><br><span class="line">        Trace.traceBegin(TRACE_TAG_PACKAGE_MANAGER, &quot;installPackage&quot;);</span><br><span class="line">        installPackageLI(args, res);</span><br><span class="line">    &#125; finally &#123;</span><br><span class="line">        Trace.traceEnd(TRACE_TAG_PACKAGE_MANAGER);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>十一、installPackageLI<br>继续PMS.installPackageLI：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br></pre></td><td class="code"><pre><span class="line">private void installPackageLI(InstallArgs args, PackageInstalledInfo res) &#123;</span><br><span class="line">    </span><br><span class="line">    // PackageParser对象</span><br><span class="line">    PackageParser pp = new PackageParser();</span><br><span class="line">    pp.setSeparateProcesses(mSeparateProcesses);</span><br><span class="line">    pp.setDisplayMetrics(mMetrics);</span><br><span class="line">    Trace.traceBegin(TRACE_TAG_PACKAGE_MANAGER, &quot;parsePackage&quot;);</span><br><span class="line">    final PackageParser.Package pkg;</span><br><span class="line">    try &#123;</span><br><span class="line">        if (DEBUG_INSTALL) Slog.i(TAG, &quot;Start parsing apk: &quot; + installerPackageName);</span><br><span class="line">        // 1.开始解析我们的package</span><br><span class="line">        pkg = pp.parsePackage(tmpPackageFile, parseFlags);</span><br><span class="line">        if (DEBUG_INSTALL) Slog.i(TAG, &quot;Parsing done for apk: &quot; + installerPackageName);</span><br><span class="line">    &#125; catch (PackageParserException e) &#123;</span><br><span class="line">        res.setError(&quot;Failed parse during installPackageLI&quot;, e);</span><br><span class="line">        return;</span><br><span class="line">    &#125; finally &#123;</span><br><span class="line">        Trace.traceEnd(TRACE_TAG_PACKAGE_MANAGER);</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">    //2. 加载证书，获取签名信息</span><br><span class="line">    try &#123;</span><br><span class="line">        // either use what we&apos;ve been given or parse directly from the APK</span><br><span class="line">        if (args.certificates != null) &#123;</span><br><span class="line">            try &#123;</span><br><span class="line">                PackageParser.populateCertificates(pkg, args.certificates);</span><br><span class="line">            &#125; catch (PackageParserException e) &#123;</span><br><span class="line">                PackageParser.collectCertificates(pkg, parseFlags);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">            PackageParser.collectCertificates(pkg, parseFlags);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; catch (PackageParserException e) &#123;</span><br><span class="line">        res.setError(&quot;Failed collect during installPackageLI&quot;, e);</span><br><span class="line">        return;</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">    synchronized (mPackages) &#123;</span><br><span class="line">        // 3.检测packages是否存在</span><br><span class="line">        if ((installFlags &amp; PackageManager.INSTALL_REPLACE_EXISTING) != 0) &#123;</span><br><span class="line">                ...</span><br><span class="line">                replace = true;</span><br><span class="line">                </span><br><span class="line">            &#125; else if (mPackages.containsKey(pkgName)) &#123;</span><br><span class="line">                ...</span><br><span class="line">                replace = true;</span><br><span class="line">                if (DEBUG_INSTALL) Slog.d(TAG, &quot;Replace existing pacakge: &quot; + pkgName);</span><br><span class="line">            &#125;</span><br><span class="line">            ...           </span><br><span class="line">        &#125;</span><br><span class="line">    &#125;    </span><br><span class="line">    ...</span><br><span class="line">    try (PackageFreezer freezer = freezePackageForInstall(pkgName, installFlags,</span><br><span class="line">            &quot;installPackageLI&quot;)) &#123;</span><br><span class="line">        if (replace) &#123;</span><br><span class="line">            // 4.更新已经存在的packages</span><br><span class="line">            replacePackageLIF(pkg, parseFlags, scanFlags | SCAN_REPLACING, args.user,</span><br><span class="line">                    installerPackageName, res);</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">            // 5.安装新的packages</span><br><span class="line">            installNewPackageLIF(pkg, parseFlags, scanFlags | SCAN_DELETE_DATA_ON_FAILURES,</span><br><span class="line">                    args.user, installerPackageName, volumeUuid, res);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>这个函数过程比较长，主要做了几件事：</p>
+<ul>
+<li>PackageParser$parsePackage，主要是解析APK的AndroidManifest.xml，将每个标签对应的信息添加到Package的相关列表中，如将下的信息添加到Package的activities列表等。</li>
+<li>加载apk证书，获取签名信息</li>
+<li>检查目前安装的APK是否在系统中已存在:<ul>
+<li>已存在，则调用replacePackageLIF进行替换安装。</li>
+<li>不存在，否则调用installNewPackageLIF进行安装。</li>
+</ul>
+</li>
+</ul>
+<p>11.1 replacePackageLIF<br>如果需要替换的是系统APP，则调用Settings$disableSystemPackageLPw来disable旧的APK；如果替换的是非系统APP，则调用deletePackageLI删除旧的APK。</p>
+<p>因为这个过程实在太差，没有必要贴出来一一分析，我来简化一下flow，有兴趣的读者可以深入跟进：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">replacePackageLIF</span><br><span class="line">    replaceSystemPackageLIF  // 系统 pkg</span><br><span class="line">        removePackageLI</span><br><span class="line">        disableSystemPackageLPw</span><br><span class="line">        clearAppDataLIF</span><br><span class="line">        scanPackageTracedLI  //安装apk</span><br><span class="line">            scanPackageLI</span><br><span class="line">                scanPackageDirtyLI  </span><br><span class="line">        updateSettingsLI</span><br><span class="line">        updatePermissionsLPw</span><br><span class="line">        mSettings.writeLPr();</span><br><span class="line">    replaceNonSystemPackageLIF  // 非系统 pkg</span><br><span class="line">        deletePackageLIF</span><br><span class="line">        clearAppDataLIF</span><br><span class="line">        clearAppProfilesLIF</span><br><span class="line">        scanPackageTracedLI    // 安装apk</span><br><span class="line">            scanPackageLI</span><br><span class="line">                scanPackageDirtyLI  </span><br><span class="line">        updateSettingsLI</span><br><span class="line">        updatePermissionsLPw</span><br><span class="line">        mSettings.writeLPr();</span><br></pre></td></tr></table></figure></p>
+<p>不管是更新系统还是非系统apk，都会先清除之前的packages信息，然后通过scanPackageTracedLI去安装apk，安装完后更新permissions和setting，最后通过writeLPr更新packages.xml。</p>
+<p>关于scanPackageTracedLI和Settings.writeLPr();我有在上一篇blog讲过，可以回去看看。</p>
+<p>11.2 installNewPackageLIF<br>PMS.installNewPackageLIF用于安装新的apk：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line">private void installNewPackageLIF(PackageParser.Package pkg, final int policyFlags,</span><br><span class="line">            int scanFlags, UserHandle user, String installerPackageName, String volumeUuid,</span><br><span class="line">            PackageInstalledInfo res) &#123;</span><br><span class="line">        Trace.traceBegin(TRACE_TAG_PACKAGE_MANAGER, &quot;installNewPackage&quot;);</span><br><span class="line">        // Remember this for later, in case we need to rollback this install</span><br><span class="line">        String pkgName = pkg.packageName;</span><br><span class="line">        if (DEBUG_INSTALL) Slog.d(TAG, &quot;installNewPackageLI: &quot; + pkg);</span><br><span class="line">        // package已经存在</span><br><span class="line">        synchronized(mPackages) &#123;</span><br><span class="line">            if (mSettings.mRenamedPackages.containsKey(pkgName)) &#123;</span><br><span class="line">                // A package with the same name is already installed, though</span><br><span class="line">                // it has been renamed to an older name.  The package we</span><br><span class="line">                // are trying to install should be installed as an update to</span><br><span class="line">                // the existing one, but that has not been requested, so bail.</span><br><span class="line">                res.setError(INSTALL_FAILED_ALREADY_EXISTS, &quot;Attempt to re-install &quot; + pkgName</span><br><span class="line">                        + &quot; without first uninstalling package running as &quot;</span><br><span class="line">                        + mSettings.mRenamedPackages.get(pkgName));</span><br><span class="line">                return;</span><br><span class="line">            &#125;</span><br><span class="line">            if (mPackages.containsKey(pkgName)) &#123;</span><br><span class="line">                // Don&apos;t allow installation over an existing package with the same name.</span><br><span class="line">                res.setError(INSTALL_FAILED_ALREADY_EXISTS, &quot;Attempt to re-install &quot; + pkgName</span><br><span class="line">                        + &quot; without first uninstalling.&quot;);</span><br><span class="line">                return;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        try &#123;</span><br><span class="line">            // 1. 安装apk</span><br><span class="line">            PackageParser.Package newPackage = scanPackageTracedLI(pkg, policyFlags, scanFlags,</span><br><span class="line">                    System.currentTimeMillis(), user);</span><br><span class="line">            // 2. 更新setting</span><br><span class="line">            updateSettingsLI(newPackage, installerPackageName, null, res, user);</span><br><span class="line">            if (res.returnCode == PackageManager.INSTALL_SUCCEEDED) &#123;</span><br><span class="line">                prepareAppDataAfterInstallLIF(newPackage);</span><br><span class="line">            &#125; else &#123;</span><br><span class="line">                // Remove package from internal structures, but keep around any</span><br><span class="line">                // data that might have already existed</span><br><span class="line">                deletePackageLIF(pkgName, UserHandle.ALL, false, null,</span><br><span class="line">                        PackageManager.DELETE_KEEP_DATA, res.removedInfo, true, null);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; catch (PackageManagerException e) &#123;</span><br><span class="line">            res.setError(&quot;Package couldn&apos;t be installed in &quot; + pkg.codePath, e);</span><br><span class="line">        &#125;</span><br><span class="line">        Trace.traceEnd(TRACE_TAG_PACKAGE_MANAGER);</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure></p>
+<p>installNewPackageLIF会调用scanPackageTracedLI去安装apk，最终会调用scanPackageLI-&gt;scanPackageDirtyLI实际去安装apk。</p>
+
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="https://langgithub.github.io/2020/06/09/Android源码(4)-应用程序安装流程/" title="Android源码(4)-应用程序安装流程" target="_blank" rel="external">https://langgithub.github.io/2020/06/09/Android源码(4)-应用程序安装流程/</a>
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN协议</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+
+<div class="panel panel-default panel-badger">
+  <div class="panel-body">
+    <figure class="media">
+      <div class="media-left">
+        <a href="https://github.com/langgithub" target="_blank" class="img-burn thumb-sm visible-lg">
+          <img src="/images/avatar.jpg" class="img-rounded w-full" alt="">
+        </a>
+      </div>
+      <div class="media-body">
+        <h3 class="media-heading"><a href="https://github.com/langgithub" target="_blank"><span class="text-dark">yuanlang</span><small class="ml-1x">Python</small></a></h3>
+        <div>本人毕业于四川文理学院。目前从事网络爬虫，Android逆向方面工作，也热衷于算法与数据分析。</div>
+      </div>
+    </figure>
+  </div>
+</div>
+
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+      
+      <div id="vcomment" class="comment"></div> 
+      <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+      <script src="//unpkg.com/valine/dist/Valine.min.js"></script>
+      <script>
+         var notify = 'false' == true ? true : false;
+         var verify = 'false' == true ? true : false;
+          window.onload = function() {
+              new Valine({
+                  el: '.comment',
+                  notify: notify,
+                  verify: verify,
+                  app_id: "eMPxlnHK3gsE9VV9ehB05y5C-gzGzoHsz",
+                  app_key: "h5S0YSOKqe4rF8HMVfJqruw7",
+                  placeholder: "ヾﾉ≧∀≦)o来啊，快活啊!",
+                  avatar:"mm"
+              });
+          }
+      </script>
+      
+    
+  </section>
+
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    <li class="prev">
+      <a href="/2020/06/09/Android源码(6)-Android消息机制/" title="Android源码(6)-Android消息机制"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;Newer</span></a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/2020/06/09/Android源码(3)-PackageManagerService启动流程/" title="Android源码(3)-PackageManagerService启动流程"><span>Older&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+  </ul>
+  
+  
+  <!-- Button trigger modal -->
+  <button type="button" class="btn btn-fancy btn-donate pop-onhover bg-gradient-warning" data-toggle="modal" data-target="#donateModal"><span>$</span></button>
+  <!-- <div class="wave-icon wave-icon-danger btn-donate" data-toggle="modal" data-target="#donateModal">
+    <div class="wave-circle"><span class="icon"><i class="icon icon-bill"></i></span></div>
+  </div> -->
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,qq,wechat,facebook,twitter" data-mobile-sites="weibo,qq,qzone"></div>
+    
+  </div>
+  </div>
+</nav>
+  
+<!-- Modal -->
+<div class="modal modal-center modal-small modal-xs-full fade" id="donateModal" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content donate">
+      <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+      <div class="modal-body">
+        <div class="donate-box">
+          <div class="donate-head">
+            <p>Maybe you could buy me a cup of coffee.</p>
+          </div>
+          <div class="tab-content">
+            <div role="tabpanel" class="tab-pane fade active in" id="alipay">
+              <div class="donate-payimg">
+                <img src="/images/donate/alipayimg.png" alt="Scan Qrcode" title="Scan" />
+              </div>
+              <p class="text-muted mv">Scan this qrcode</p>
+              <p class="text-grey">Open alipay app scan this qrcode, buy me a coffee!</p>
+            </div>
+            <div role="tabpanel" class="tab-pane fade" id="wechatpay">
+              <div class="donate-payimg">
+                <img src="/images/donate/wechatpayimg.png" alt="Scan Qrcode" title="Scan" />
+              </div>
+              <p class="text-muted mv">Scan this qrcode</p>
+              <p class="text-grey">Open wechat app scan this qrcode, buy me a coffee!</p>
+            </div>
+          </div>
+          <div class="donate-footer">
+            <ul class="nav nav-tabs nav-justified" role="tablist">
+              <li role="presentation" class="active">
+                <a href="#alipay" id="alipay-tab" role="tab" data-toggle="tab" aria-controls="alipay" aria-expanded="true"><i class="icon icon-alipay"></i> alipay</a>
+              </li>
+              <li role="presentation" class="">
+                <a href="#wechatpay" role="tab" id="wechatpay-tab" data-toggle="tab" aria-controls="wechatpay" aria-expanded="false"><i class="icon icon-wepay"></i> wechat payment</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/langgithub" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
+
+    <div class="copyright">
+    	
+        <div class="publishby">
+        	Theme by <a href="https://github.com/cofess" target="_blank"> cofess </a>base on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+        </div>
+    </div>
+</footer>
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+<script>
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+</script>
+<script src="/js/plugin.min.js"></script>
+<script src="/js/application.js"></script>
+
+    <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: 'Posts',
+            PAGES: 'Pages',
+            CATEGORIES: 'Categories',
+            TAGS: 'Tags',
+            UNTITLED: '(Untitled)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+<script src="/js/insight.js"></script>
+
+
+
+
+
+   
+
+
+<!-- custom analytics part create by xiamo -->
+<script defer src="https://cdn1.lncld.net/static/js/av-min-1.2.1.js"></script>
+<script defer>
+AV.init({
+  appId: 'eMPxlnHK3gsE9VV9ehB05y5C-gzGzoHsz',
+  appKey: 'h5S0YSOKqe4rF8HMVfJqruw7'
+});
+
+function showTime(Counter) {
+	var query = new AV.Query(Counter);
+		var visitors= $('.leancloud_visitors');
+		query.greaterThanOrEqualTo("time", 0);		
+		query.find({
+			success: function(results) {
+				if (results.length == 0) {				
+					return;
+				}
+				var data = results;
+				visitors.each(function(){
+					var url = $(this).attr('id').trim();					
+					for (var i = 0; i < data.length; i++) {
+						var object = data[i];
+						var content = object.get('time');
+						var _url = object.get('url')
+						if(url == _url){
+							$(this).text(content);
+						}
+					}
+				})
+				
+			},
+			error: function(object, error) {
+				console.log("Error: " + error.code + " " + error.message);
+			}
+		});
+}
+
+function addCount(Counter) {
+	var Counter = AV.Object.extend("Counter");
+	url = $(".leancloud_visitors").attr('id').trim();
+	title = $(".leancloud_visitors").attr('data-flag-title').trim();
+	var query = new AV.Query(Counter);
+	query.equalTo("url", url);
+	query.find({
+		success: function(results) {
+			if (results.length > 0) {
+				var counter = results[0];
+				counter.fetchWhenSave(true);
+				counter.increment("time");
+				counter.save(null, {
+					success: function(counter) {
+						var content = counter.get('time');
+						$(document.getElementById(url)).text(content);
+					},
+					error: function(counter, error) {
+						console.log('Failed to save Visitor num, with error message: ' + error.message);
+					}
+				});
+			} else {
+				var newcounter = new Counter();
+				newcounter.set("title", title);
+				newcounter.set("url", url);
+				newcounter.set("time", 1);
+				newcounter.save(null, {
+					success: function(newcounter) {
+					    console.log("newcounter.get('time')="+newcounter.get('time'));
+						var content = newcounter.get('time');
+						$(document.getElementById(url)).text(content);
+					},
+					error: function(newcounter, error) {
+						console.log('Failed to create');
+					}
+				});
+			}
+		},
+		error: function(error) {
+			console.log('Error:' + error.code + " " + error.message);
+		}
+	});
+}
+$(function() {
+	var Counter = AV.Object.extend("Counter");
+	if ($('.leancloud_visitors').length == 1) {
+		addCount(Counter);
+	} else {
+		showTime(Counter);
+	}
+}); 
+</script>
+
+
+
+   
+    
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/valine"></script>
+  <script type="text/javascript">
+  var GUEST = ['nick', 'mail', 'link'];
+  var meta = 'nick,mail,link';
+  meta = meta.split(',').filter(function(item) {
+    return GUEST.indexOf(item) > -1;
+  });
+  new Valine({
+    el: '#vcomments',
+    verify: false,
+    notify: false,
+    appId: '',
+    appKey: '',
+    placeholder: 'Just go go',
+    avatar: 'mm',
+    meta: meta,
+    pageSize: '10' || 10,
+    visitor: false
+  });
+  </script>
+
+     
+
+
+
+
+
+
+
+</body>
+</html>
